@@ -1,0 +1,604 @@
+openapi: 3.1.0
+info:
+  title: API de Guías de Remisión Electrónicas (GRE - Dispatch Advise)
+  version: 0.1.0
+  description: |
+    API-001. Contrato para la emisión de Guías de Remisión Electrónicas - Remitente
+    (tipo de comprobante 09) conforme al estándar UBL 2.1 `DespatchAdvice` exigido por SUNAT.
+
+    Regla de negocio principal: ningún vehículo puede salir del almacén sin una GRE
+    en estado `ACEPTADA` por SUNAT.
+
+    Flujo:
+      1. `POST /guias-remision` crea la guía en `BORRADOR`.
+      2. `POST /guias-remision/{id}/validar` valida reglas de negocio y el XML UBL contra los XSD.
+      3. `POST /guias-remision/{id}/emitir` firma y envía a SUNAT; devuelve un ticket.
+      4. `GET  /guias-remision/{id}/estado` consulta el ticket hasta obtener el CDR.
+      5. `GET  /guias-remision/{id}/autorizacion-salida` confirma si el vehículo puede salir.
+
+    Implementación prevista: Python (FastAPI + Pydantic). Los `operationId` en snake_case
+    corresponden a los nombres de las funciones de los endpoints.
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Desarrollo local
+
+tags:
+  - name: Guías de Remisión
+  - name: Emisión SUNAT
+  - name: Documentos
+  - name: Despacho
+  - name: Catálogos
+  - name: Salud
+
+paths:
+  /health:
+    get:
+      tags: [Salud]
+      operationId: health_check
+      summary: Verifica que el servicio está activo
+      responses:
+        "200":
+          description: Servicio operativo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+
+  /guias-remision:
+    post:
+      tags: [Guías de Remisión]
+      operationId: crear_guia_remision
+      summary: Crea una guía de remisión en estado BORRADOR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GuiaRemisionCreate" }
+      responses:
+        "201":
+          description: Guía creada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GuiaRemision" }
+        "422": { $ref: "#/components/responses/ErrorValidacion" }
+
+    get:
+      tags: [Guías de Remisión]
+      operationId: listar_guias_remision
+      summary: Lista guías con filtros y paginación
+      parameters:
+        - $ref: "#/components/parameters/FiltroEstado"
+        - $ref: "#/components/parameters/FiltroSerie"
+        - $ref: "#/components/parameters/FiltroRucDestinatario"
+        - $ref: "#/components/parameters/FiltroFechaDesde"
+        - $ref: "#/components/parameters/FiltroFechaHasta"
+        - $ref: "#/components/parameters/FiltroPlaca"
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        "200":
+          description: Página de guías
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GuiaRemisionPagina" }
+
+  /guias-remision/exportar:
+    get:
+      tags: [Guías de Remisión]
+      operationId: exportar_guias_remision_excel
+      summary: Exporta a Excel (.xlsx) las guías que cumplen los filtros
+      description: |
+        FEAT-001 (`specs/features/001-exportar-guias-excel.md`). Usa los mismos filtros
+        que el listado, sin paginación. Genera las hojas `Guias` e `Items`.
+        Solo para el rol `superadmin`. Máximo 100 guías por exportación.
+      security:
+        - bearerAuth: []
+      x-roles: [superadmin]
+      parameters:
+        - $ref: "#/components/parameters/FiltroEstado"
+        - $ref: "#/components/parameters/FiltroSerie"
+        - $ref: "#/components/parameters/FiltroRucDestinatario"
+        - $ref: "#/components/parameters/FiltroFechaDesde"
+        - $ref: "#/components/parameters/FiltroFechaHasta"
+        - $ref: "#/components/parameters/FiltroPlaca"
+      responses:
+        "200":
+          description: Archivo Excel con las guías
+          headers:
+            Content-Disposition:
+              description: 'attachment; filename="guias-remision_AAAAMMDD-HHMMSS.xlsx"'
+              schema: { type: string }
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema: { type: string, format: binary }
+        "401": { $ref: "#/components/responses/NoAutenticado" }
+        "403":
+          description: El usuario no tiene rol `superadmin` (código `EXPORTACION_NO_AUTORIZADA`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: |
+            Filtros inválidos (p. ej. `fecha_desde` > `fecha_hasta`) o el resultado supera
+            las 100 guías (código `EXPORTACION_EXCEDE_LIMITE`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /guias-remision/{guia_id}:
+    parameters:
+      - $ref: "#/components/parameters/GuiaId"
+    get:
+      tags: [Guías de Remisión]
+      operationId: obtener_guia_remision
+      summary: Obtiene el detalle de una guía
+      responses:
+        "200":
+          description: Detalle de la guía
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GuiaRemision" }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+
+    put:
+      tags: [Guías de Remisión]
+      operationId: actualizar_guia_remision
+      summary: Actualiza una guía (solo en BORRADOR o RECHAZADA)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GuiaRemisionCreate" }
+      responses:
+        "200":
+          description: Guía actualizada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GuiaRemision" }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+        "409": { $ref: "#/components/responses/EstadoInvalido" }
+        "422": { $ref: "#/components/responses/ErrorValidacion" }
+
+    delete:
+      tags: [Guías de Remisión]
+      operationId: eliminar_guia_remision
+      summary: Elimina una guía que aún no fue enviada a SUNAT
+      responses:
+        "204": { description: Guía eliminada }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+        "409": { $ref: "#/components/responses/EstadoInvalido" }
+
+  /guias-remision/{guia_id}/validar:
+    parameters:
+      - $ref: "#/components/parameters/GuiaId"
+    post:
+      tags: [Emisión SUNAT]
+      operationId: validar_guia_remision
+      summary: Valida reglas de negocio y el XML UBL DespatchAdvice contra los XSD de SUNAT
+      description: Si la validación es exitosa la guía pasa a estado VALIDADA.
+      responses:
+        "200":
+          description: Resultado de la validación
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ResultadoValidacion" }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+        "409": { $ref: "#/components/responses/EstadoInvalido" }
+
+  /guias-remision/{guia_id}/emitir:
+    parameters:
+      - $ref: "#/components/parameters/GuiaId"
+    post:
+      tags: [Emisión SUNAT]
+      operationId: emitir_guia_remision
+      summary: Genera el XML UBL, lo firma digitalmente y lo envía a SUNAT
+      description: |
+        Solo para guías en estado VALIDADA. El envío a SUNAT es asíncrono: se obtiene
+        un número de ticket y la guía pasa a EN_PROCESO.
+      responses:
+        "202":
+          description: Enviada a SUNAT, pendiente de respuesta
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EstadoSunat" }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+        "409": { $ref: "#/components/responses/EstadoInvalido" }
+        "502": { $ref: "#/components/responses/ErrorSunat" }
+
+  /guias-remision/{guia_id}/estado:
+    parameters:
+      - $ref: "#/components/parameters/GuiaId"
+    get:
+      tags: [Emisión SUNAT]
+      operationId: consultar_estado_guia
+      summary: Consulta el ticket en SUNAT y actualiza el estado de la guía
+      responses:
+        "200":
+          description: Estado actual ante SUNAT
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EstadoSunat" }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+        "502": { $ref: "#/components/responses/ErrorSunat" }
+
+  /guias-remision/{guia_id}/xml:
+    parameters:
+      - $ref: "#/components/parameters/GuiaId"
+    get:
+      tags: [Documentos]
+      operationId: descargar_xml_guia
+      summary: Descarga el XML UBL DespatchAdvice firmado
+      responses:
+        "200":
+          description: XML firmado
+          content:
+            application/xml:
+              schema: { type: string }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+
+  /guias-remision/{guia_id}/cdr:
+    parameters:
+      - $ref: "#/components/parameters/GuiaId"
+    get:
+      tags: [Documentos]
+      operationId: descargar_cdr_guia
+      summary: Descarga la Constancia de Recepción (CDR) emitida por SUNAT
+      responses:
+        "200":
+          description: CDR en formato ZIP
+          content:
+            application/zip:
+              schema: { type: string, format: binary }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+
+  /guias-remision/{guia_id}/pdf:
+    parameters:
+      - $ref: "#/components/parameters/GuiaId"
+    get:
+      tags: [Documentos]
+      operationId: descargar_pdf_guia
+      summary: Descarga la representación impresa (PDF con código QR)
+      responses:
+        "200":
+          description: Representación impresa
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+        "409": { $ref: "#/components/responses/EstadoInvalido" }
+
+  /guias-remision/{guia_id}/autorizacion-salida:
+    parameters:
+      - $ref: "#/components/parameters/GuiaId"
+    get:
+      tags: [Despacho]
+      operationId: verificar_autorizacion_salida
+      summary: Indica si el vehículo puede salir del almacén
+      description: Solo autoriza la salida si la guía está ACEPTADA por SUNAT.
+      responses:
+        "200":
+          description: Resultado de la verificación
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AutorizacionSalida" }
+        "404": { $ref: "#/components/responses/NoEncontrado" }
+
+  /catalogos/motivos-traslado:
+    get:
+      tags: [Catálogos]
+      operationId: listar_motivos_traslado
+      summary: Catálogo SUNAT N° 20 - Motivos de traslado
+      responses:
+        "200":
+          description: Lista de motivos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ItemCatalogo" }
+
+  /catalogos/modalidades-traslado:
+    get:
+      tags: [Catálogos]
+      operationId: listar_modalidades_traslado
+      summary: Catálogo SUNAT N° 18 - Modalidad de traslado
+      responses:
+        "200":
+          description: Lista de modalidades
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ItemCatalogo" }
+
+  /catalogos/unidades-medida:
+    get:
+      tags: [Catálogos]
+      operationId: listar_unidades_medida
+      summary: Catálogo SUNAT N° 03 - Unidades de medida (UN/ECE Rec 20)
+      responses:
+        "200":
+          description: Lista de unidades
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ItemCatalogo" }
+
+components:
+  parameters:
+    GuiaId:
+      name: guia_id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    FiltroEstado:
+      { name: estado, in: query, schema: { $ref: "#/components/schemas/EstadoGuia" } }
+    FiltroSerie:
+      { name: serie, in: query, schema: { type: string } }
+    FiltroRucDestinatario:
+      { name: ruc_destinatario, in: query, schema: { type: string } }
+    FiltroFechaDesde:
+      { name: fecha_desde, in: query, schema: { type: string, format: date } }
+    FiltroFechaHasta:
+      { name: fecha_hasta, in: query, schema: { type: string, format: date } }
+    FiltroPlaca:
+      { name: placa, in: query, schema: { type: string } }
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: El token debe incluir los roles del usuario (claim `roles`).
+
+  responses:
+    NoAutenticado:
+      description: Token ausente o inválido
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NoEncontrado:
+      description: Guía no encontrada
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    EstadoInvalido:
+      description: La operación no está permitida en el estado actual de la guía
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ErrorValidacion:
+      description: Datos de entrada inválidos
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ErrorSunat:
+      description: Error de comunicación con SUNAT
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    EstadoGuia:
+      type: string
+      enum: [BORRADOR, VALIDADA, EN_PROCESO, ACEPTADA, OBSERVADA, RECHAZADA]
+
+    TipoDocumentoIdentidad:
+      type: string
+      description: "Catálogo SUNAT N° 06 (1=DNI, 4=Carnet extranjería, 6=RUC, 7=Pasaporte)"
+      enum: ["1", "4", "6", "7", "A"]
+
+    Contribuyente:
+      type: object
+      required: [tipo_documento, numero_documento, razon_social]
+      properties:
+        tipo_documento: { $ref: "#/components/schemas/TipoDocumentoIdentidad" }
+        numero_documento: { type: string, maxLength: 15, example: "20123456789" }
+        razon_social: { type: string, maxLength: 250 }
+
+    Direccion:
+      type: object
+      required: [ubigeo, direccion]
+      properties:
+        ubigeo: { type: string, pattern: "^[0-9]{6}$", example: "150101" }
+        direccion: { type: string, maxLength: 500 }
+        codigo_establecimiento:
+          type: string
+          pattern: "^[0-9]{4}$"
+          description: Código de establecimiento anexo SUNAT (obligatorio si motivo = 04)
+
+    Transportista:
+      type: object
+      description: Obligatorio cuando la modalidad es 01 (transporte público)
+      required: [ruc, razon_social]
+      properties:
+        ruc: { type: string, pattern: "^[0-9]{11}$" }
+        razon_social: { type: string, maxLength: 250 }
+        registro_mtc: { type: string, maxLength: 20 }
+
+    Vehiculo:
+      type: object
+      required: [placa]
+      properties:
+        placa: { type: string, pattern: "^[A-Z0-9]{6,8}$", example: "ABC123" }
+        es_principal: { type: boolean, default: true }
+        tarjeta_unica_circulacion: { type: string, maxLength: 15 }
+
+    Conductor:
+      type: object
+      required: [tipo_documento, numero_documento, nombres, apellidos, licencia]
+      properties:
+        tipo_documento: { $ref: "#/components/schemas/TipoDocumentoIdentidad" }
+        numero_documento: { type: string, maxLength: 15 }
+        nombres: { type: string, maxLength: 250 }
+        apellidos: { type: string, maxLength: 250 }
+        licencia: { type: string, pattern: "^[A-Z0-9]{9,10}$" }
+        es_principal: { type: boolean, default: true }
+
+    ItemGuia:
+      type: object
+      required: [descripcion, cantidad, unidad_medida]
+      properties:
+        codigo: { type: string, maxLength: 30 }
+        descripcion: { type: string, maxLength: 500 }
+        cantidad: { type: number, exclusiveMinimum: 0 }
+        unidad_medida: { type: string, example: NIU, description: Catálogo N° 03 }
+        codigo_producto_sunat: { type: string, maxLength: 8 }
+
+    DocumentoRelacionado:
+      type: object
+      required: [tipo_documento, serie_numero, ruc_emisor]
+      properties:
+        tipo_documento: { type: string, example: "01", description: "01=Factura, 03=Boleta, etc." }
+        serie_numero: { type: string, example: F001-00000123 }
+        ruc_emisor: { type: string, pattern: "^[0-9]{11}$" }
+
+    GuiaRemisionCreate:
+      type: object
+      required:
+        - serie
+        - fecha_emision
+        - remitente
+        - destinatario
+        - motivo_traslado
+        - modalidad_traslado
+        - fecha_inicio_traslado
+        - peso_bruto_total
+        - unidad_peso
+        - punto_partida
+        - punto_llegada
+        - items
+      properties:
+        serie:
+          type: string
+          pattern: "^T[A-Z0-9]{3}$"
+          example: T001
+        fecha_emision: { type: string, format: date }
+        hora_emision: { type: string, format: time }
+        observaciones: { type: string, maxLength: 250 }
+        remitente: { $ref: "#/components/schemas/Contribuyente" }
+        destinatario: { $ref: "#/components/schemas/Contribuyente" }
+        motivo_traslado:
+          type: string
+          description: "Catálogo N° 20 (01=Venta, 02=Compra, 04=Traslado entre establecimientos, 13=Otros, ...)"
+          example: "01"
+        descripcion_motivo:
+          type: string
+          maxLength: 100
+          description: Obligatorio si motivo_traslado = 13
+        modalidad_traslado:
+          type: string
+          enum: ["01", "02"]
+          description: "Catálogo N° 18 (01=Transporte público, 02=Transporte privado)"
+        fecha_inicio_traslado: { type: string, format: date }
+        peso_bruto_total: { type: number, exclusiveMinimum: 0 }
+        unidad_peso: { type: string, enum: [KGM, TNE] }
+        numero_bultos: { type: integer, minimum: 0 }
+        punto_partida: { $ref: "#/components/schemas/Direccion" }
+        punto_llegada: { $ref: "#/components/schemas/Direccion" }
+        transportista: { $ref: "#/components/schemas/Transportista" }
+        vehiculos:
+          type: array
+          description: Obligatorio si modalidad_traslado = 02
+          items: { $ref: "#/components/schemas/Vehiculo" }
+        conductores:
+          type: array
+          description: Obligatorio si modalidad_traslado = 02
+          items: { $ref: "#/components/schemas/Conductor" }
+        items:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/ItemGuia" }
+        documentos_relacionados:
+          type: array
+          items: { $ref: "#/components/schemas/DocumentoRelacionado" }
+
+    GuiaRemision:
+      allOf:
+        - $ref: "#/components/schemas/GuiaRemisionCreate"
+        - type: object
+          required: [id, estado, creado_en]
+          properties:
+            id: { type: string, format: uuid }
+            numero:
+              type: integer
+              description: Correlativo asignado al emitir
+            serie_numero: { type: string, example: T001-00000001 }
+            tipo_comprobante: { type: string, const: "09" }
+            estado: { $ref: "#/components/schemas/EstadoGuia" }
+            sunat: { $ref: "#/components/schemas/EstadoSunat" }
+            creado_en: { type: string, format: date-time }
+            actualizado_en: { type: string, format: date-time }
+
+    GuiaRemisionPagina:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/GuiaRemision" }
+        total: { type: integer }
+        page: { type: integer }
+        size: { type: integer }
+
+    ResultadoValidacion:
+      type: object
+      required: [valido, errores]
+      properties:
+        valido: { type: boolean }
+        esquema_xsd: { type: string, example: UBL-DespatchAdvice-2.1.xsd }
+        errores:
+          type: array
+          items:
+            type: object
+            properties:
+              campo: { type: string }
+              codigo: { type: string }
+              mensaje: { type: string }
+
+    EstadoSunat:
+      type: object
+      properties:
+        estado: { $ref: "#/components/schemas/EstadoGuia" }
+        numero_ticket: { type: string }
+        fecha_envio: { type: string, format: date-time }
+        codigo_respuesta: { type: string, description: "Código de respuesta SUNAT (0 = aceptado)" }
+        descripcion_respuesta: { type: string }
+        observaciones:
+          type: array
+          items: { type: string }
+        hash: { type: string, description: Valor resumen de la firma digital }
+        url_qr: { type: string, format: uri }
+
+    AutorizacionSalida:
+      type: object
+      required: [autorizado, estado]
+      properties:
+        autorizado: { type: boolean }
+        estado: { $ref: "#/components/schemas/EstadoGuia" }
+        serie_numero: { type: string }
+        placas:
+          type: array
+          items: { type: string }
+        motivo:
+          type: string
+          example: La guía no ha sido aceptada por SUNAT
+
+    ItemCatalogo:
+      type: object
+      properties:
+        codigo: { type: string }
+        descripcion: { type: string }
+
+    Error:
+      type: object
+      required: [codigo, mensaje]
+      properties:
+        codigo: { type: string }
+        mensaje: { type: string }
+        detalles:
+          type: array
+          items: { type: object }
