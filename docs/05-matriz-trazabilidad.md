@@ -1,6 +1,6 @@
 # 05 — Matriz de trazabilidad normativa (SUNAT ↔ UBL 2.1 ↔ DTO)
 
-> Entregable 4 del examen. Cada fila cruza un **requisito de SUNAT** (dato exigido y su catálogo)
+> Entregable 4 del examen. **País de referencia: Perú** — UBL 2.1 con la personalización de SUNAT. Cada fila cruza un **requisito de SUNAT** (dato exigido y su catálogo)
 > con el **elemento UBL 2.1** (XPath relativo a la raíz `Invoice` / `CreditNote` / `DebitNote`),
 > el **campo del contrato** (DTO) y la **spec** que lo valida.
 >
@@ -115,11 +115,11 @@ Prefijos: `cbc:` = CommonBasicComponents, `cac:` = CommonAggregateComponents,
 | L-04 | `producto` | `Producto.descripcion` → en ventas nuevas: `cac:Item/cbc:Description` (T-46) | **Sí, indirectamente** (el producto migrado se usa en ventas nuevas) | SPEC-009 M-04 |
 | L-05 | `nro_documento` | `MovimientoInventario.documentoReferencia.numero` | **No**: nunca se convierte en `cbc:ID` (T-05) | SPEC-009 M-05 · SPEC-005 R-07 |
 
-## 9. Diferencias entre el ejemplo genérico de OASIS y la personalización SUNAT
+## 9. Diferencias entre UBL 2.1 genérico (OASIS) y la personalización SUNAT (Perú)
 
-Referencia: [UBL-Invoice-2.1-Example.xml](../specs/ref/README.md).
+Ejemplo peruano completo con estas filas anotadas: [20123456786-01-F001-123.xml](../specs/ref/20123456786-01-F001-123.xml).
 
-| Elemento | Ejemplo OASIS (genérico UE) | SUNAT (Perú) |
+| Elemento | UBL genérico (ejemplo OASIS, UE) | SUNAT (Perú) |
 |---|---|---|
 | `cbc:CustomizationID` | Ausente | Obligatorio `2.0` |
 | `cbc:InvoiceTypeCode` | `380` (UN/ECE 1001) | `01` / `03` (catálogo 01) con `@listID` = tipo de operación |

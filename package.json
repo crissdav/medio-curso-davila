@@ -8,7 +8,8 @@
     "validate": "node scripts/validate.mjs && npm run lint:api",
     "validate:specs": "node scripts/validate.mjs",
     "lint:api": "redocly lint specs/api/openapi.yaml --config redocly.yaml",
-    "check:mermaid": "node scripts/check-mermaid.mjs"
+    "check:mermaid": "node scripts/check-mermaid.mjs",
+    "check:xsd": "java -Dstdout.encoding=UTF-8 scripts/ValidarXsd.java"
   },
   "devDependencies": {
     "@redocly/cli": "1.34.3",

@@ -24,9 +24,9 @@ con XMLDSig.
 | R-10 | Se conservan XML firmado y CDR por el plazo legal de conservación. |
 
 ## Criterios de aceptación
-- **AC-1:** Dado el comprobante de [factura-response.json](../schemas/examples/factura-response.json), cuando genero el XML, entonces valida contra `UBL-Invoice-2.1.xsd`.
+- **AC-1:** Dado el comprobante de [factura-response.json](../schemas/examples/factura-response.json), cuando genero el XML, entonces equivale a [20123456786-01-F001-123.xml](../ref/20123456786-01-F001-123.xml) y valida contra `UBL-Invoice-2.1.xsd` (`npm run check:xsd`).
 - **AC-2:** Dado un XML firmado, cuando altero un monto, entonces la verificación de firma falla.
 - **AC-3:** Dado un certificado vencido, entonces la firma se rechaza con error de configuración y el comprobante no avanza de `BORRADOR`.
 
 ## Referencias
-- XSD y ejemplo OASIS: [specs/ref/](../ref/README.md)
+- XML de ejemplo SUNAT y validación XSD: [specs/ref/](../ref/README.md)

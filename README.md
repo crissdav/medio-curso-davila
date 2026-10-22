@@ -2,15 +2,16 @@
 
 **primera fase (Spec-First)**: especificaciones técnicas definidas antes de
 escribir lógica de negocio. No contiene código de implementación.
+**País de referencia: Perú** — UBL 2.1 con la personalización de SUNAT.
 
 ## 1. Resumen de lo realizado
 
 | Fase | Resultado |
 |---|---|
-| **Entender** | Análisis del caso: el legado es un control de almacén (`fecha, ingreso, salida, producto, nro_documento`) sin validación de RUC, cálculo de tributos, XML UBL ni conexión con SUNAT/OSE. Base normativa: RS 097-2012, RS 234-2006, catálogos SUNAT (énfasis en el **catálogo 08 — ISC**) y UBL 2.1 de OASIS. |
+| **Entender** | Análisis del caso: el legado es un control de almacén (`fecha, ingreso, salida, producto, nro_documento`) sin validación de RUC, cálculo de tributos, XML UBL ni conexión con SUNAT/OSE. Base normativa: RS 097-2012, RS 234-2006, catálogos SUNAT (énfasis en el **catálogo 08 — ISC**) y UBL 2.1 con personalización SUNAT. |
 | **Planificar** | 12 specs funcionales derivadas de cada vacío del enunciado, 3 decisiones de arquitectura (ADR) y estructura `docs/` + `specs/`. |
-| **Actuar** | 4 entregables del examen + casos de uso, migración del legado, 12 JSON Schemas, 11 catálogos y contrato OpenAPI. |
-| **Validar** | Script automático con 435 verificaciones, lint de OpenAPI y renderizado de los 10 diagramas. Corrigió 2 errores de cálculo en el ejemplo de factura. |
+| **Actuar** | 4 entregables del examen + casos de uso (contrastados con Nubefact), migración del legado, 12 JSON Schemas, 11 catálogos, contrato OpenAPI y factura XML UBL SUNAT de ejemplo. |
+| **Validar** | Script automático con 442 verificaciones, lint de OpenAPI, renderizado de los 10 diagramas y validación de los XML contra el XSD oficial UBL 2.1. Corrigió 2 errores de cálculo en el ejemplo de factura. |
 
 **Decisiones clave**
 
@@ -61,6 +62,7 @@ ADR: [001 Stack](docs/adr/001-stack-multiplataforma.md) ·
 npm install
 npm run validate        # esquemas, ejemplos, aritmética SPEC-003, matriz, enlaces y lint OpenAPI
 npm run check:mermaid   # renderiza los diagramas (usa Chrome/Edge instalado o CHROME_PATH)
+npm run check:xsd       # valida los XML de specs/ref/ contra el XSD oficial UBL 2.1 (requiere JDK 11+)
 ```
 
 ## 5. Trabajo a futuro
