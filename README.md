@@ -1,7 +1,6 @@
 # ABC Software Corp — Facturación Electrónica SUNAT (Spec-First)
 
-Examen de medio curso — Arquitectura de Software (UNAS, Grupo "A").
-Entregable de la **primera fase (Spec-First)**: especificaciones técnicas definidas antes de
+**primera fase (Spec-First)**: especificaciones técnicas definidas antes de
 escribir lógica de negocio. No contiene código de implementación.
 
 ## 1. Resumen de lo realizado
