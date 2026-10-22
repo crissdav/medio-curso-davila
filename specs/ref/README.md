@@ -10,15 +10,21 @@ Todos los contratos de este repositorio siguen **UBL 2.1 con la personalización
 
 Ambos XML están **sin firma**: la firma XMLDSig se inserta en `ext:ExtensionContent` al firmar (SPEC-006).
 
-## Validación contra el XSD oficial
+## Validación en dos capas
 
-```bash
-npm run check:xsd   # java scripts/ValidarXsd.java — descarga los XSD de OASIS en .cache/ la primera vez
-```
+> UBL 2.1 de OASIS da la **estructura**; la personalización SUNAT define los **valores** para Perú.
+> Por eso cada XML se valida contra ambas.
 
-Valida cada XML contra `UBL-Invoice-2.1.xsd` (o `CreditNote` / `DebitNote` según la raíz). El XSD
-verifica la estructura y el orden de los elementos; las reglas de negocio de SUNAT (códigos 2xxx–4xxx)
-se validan en el dominio (SPEC-003, SPEC-004, SPEC-005).
+| Capa | Comando | Qué verifica |
+|---|---|---|
+| **Estructura (OASIS)** | `npm run check:xsd` | El XML cumple `UBL-Invoice-2.1.xsd` (o `CreditNote` / `DebitNote`): elementos, orden y tipos. Descarga los XSD en `.cache/` la primera vez (requiere JDK 11+). |
+| **Contenido (SUNAT)** | `npm run check:sunat` | Códigos en los catálogos de [specs/catalogos/](../catalogos/) (01, 02, 03, 05, 06, 07, 08, 16, 51); `CustomizationID 2.0`; serie F/B según el tipo; RUC módulo 11; factura → cliente con RUC; ISC con `TierRange`; aritmética de líneas, impuestos y totales; y **cruce campo por campo con el JSON equivalente**. Cada error cita su fila `T-nn` de la matriz. |
+
+`npm run check:ubl` ejecuta ambas capas. Resultado actual:
+
+- `20123456786-01-F001-123.xml`: cumple el XSD y las 164 verificaciones SUNAT.
+- `sunat-factura-minima-ejemplo.xml` (terceros, solo informativo): cumple el XSD, pero usa un RUC
+  ficticio que no pasa módulo 11 y no informa la forma de pago.
 
 ## Fuentes oficiales
 

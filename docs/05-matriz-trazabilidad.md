@@ -5,7 +5,9 @@
 > el **campo del contrato** (DTO) y la **spec** que lo valida.
 >
 > Esta tabla es verificada automáticamente por `scripts/validate.mjs`: toda ruta DTO debe existir
-> en los JSON Schemas y todo código `cat-NN:código` debe existir en `specs/catalogos/`.
+> en los JSON Schemas y todo código `cat-NN:código` debe existir en `specs/catalogos/`. Además, el
+> XML de ejemplo se valida contra el XSD de OASIS (estructura) y contra estas filas (contenido SUNAT):
+> ver [specs/ref/](../specs/ref/README.md).
 
 Prefijos: `cbc:` = CommonBasicComponents, `cac:` = CommonAggregateComponents,
 `ext:` = CommonExtensionComponents, `ds:` = XMLDSig.

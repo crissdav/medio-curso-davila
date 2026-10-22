@@ -5,15 +5,19 @@
   "description": "Especificaciones Spec-First del sistema de facturación electrónica de ABC Software Corp.",
   "type": "module",
   "scripts": {
-    "validate": "node scripts/validate.mjs && npm run lint:api",
+    "validate": "node scripts/validate.mjs && npm run check:sunat && npm run lint:api",
     "validate:specs": "node scripts/validate.mjs",
+    "check:sunat": "node scripts/validar-xml-sunat.mjs",
+    "check:ubl": "npm run check:xsd && npm run check:sunat",
     "lint:api": "redocly lint specs/api/openapi.yaml --config redocly.yaml",
     "check:mermaid": "node scripts/check-mermaid.mjs",
     "check:xsd": "java -Dstdout.encoding=UTF-8 scripts/ValidarXsd.java"
   },
   "devDependencies": {
     "@redocly/cli": "1.34.3",
+    "@xmldom/xmldom": "0.8.10",
     "ajv": "8.17.1",
-    "ajv-formats": "3.0.1"
+    "ajv-formats": "3.0.1",
+    "xpath": "0.0.34"
   }
 }

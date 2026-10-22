@@ -5,7 +5,7 @@ Fuentes:
 1. Funcionalidades publicadas por **Nubefact** en su sitio web (sección 6).
 2. Problemas de emisión reportados por proveedores de facturación electrónica (sección 5).
 3. Necesidades propias de una distribuidora de abarrotes (caso del examen).
-4. Verificación con cuenta DEMO de Nubefact (sección 7).
+4. Verificación con el centro de ayuda oficial de Nubefact, que documenta su sistema web pantalla por pantalla (sección 7).
 
 ## 1. Actores
 
@@ -80,6 +80,8 @@ Prioridad MoSCoW: **M** = Must, **S** = Should, **C** = Could, **W** = Won't (es
 | UC-24 | Consulta pública del comprobante por el cliente (web, por RUC/serie/número) | Cliente final | S | SPEC-001 |
 | UC-25 | Registrar compras y proveedores (origen de los ingresos al almacén) | Almacenero | C | SPEC-010 |
 | UC-26 | Exportar reportes a Excel | Contador | S | SPEC-001 |
+| UC-27 | Emitir comprobante de contingencia (cuando no se puede emitir electrónicamente por causas no imputables) | Vendedor | C | — (fase 2) |
+| UC-28 | Emitir nota de crédito/débito sobre un comprobante físico o de otro sistema | Contador | C | — (fase 2) |
 
 ## 4. Escenarios principales (resumen)
 
@@ -138,30 +140,39 @@ aparecen en Nubefact: provienen del caso particular de ABC.
 
 Sobre opiniones de usuarios: las fuentes públicas encontradas son escasas y provienen de blogs
 de proveedores; la única valoración específica de Nubefact destaca su precio accesible y tiempos
-de soporte razonables [F4]. Por eso la verificación directa con la cuenta DEMO (sección 7) es la
-fuente principal para validar el catálogo.
+de soporte razonables [F4]. Por eso el catálogo se verificó contra el centro de ayuda oficial de
+Nubefact (sección 7), que describe su sistema web pantalla por pantalla.
 
-## 7. Verificación con cuenta DEMO de Nubefact
+## 7. Verificación con el centro de ayuda de Nubefact
 
-Completar al revisar la cuenta DEMO (marcar Sí / No y anotar lo nuevo):
+El registro en Nubefact exige un RUC real, por lo que la verificación se hizo con su centro de
+ayuda oficial [F5], que documenta cada pantalla del sistema web. Resultado: **Sí** (confirmado),
+**Parcial** (confirmado en parte) o **No verificado** (no figura en el texto público; requiere cuenta).
 
-| # | Qué revisar en Nubefact | ¿Existe? | Caso de uso | Observación |
+| # | Qué se revisó | Resultado | Evidencia en Nubefact [F5] | Caso de uso / spec |
 |---|---|---|---|---|
-| 1 | Menú principal: lista completa de opciones | | — | |
-| 2 | Formulario de factura: campos obligatorios y opcionales | | UC-01 | |
-| 3 | ¿Valida el RUC y autocompleta la razón social? | | UC-05 | |
-| 4 | Boleta: ¿permite cliente "varios" y desde qué monto lo exige? | | UC-02 | |
-| 5 | Ítems: afectación IGV, ISC, ICBPER, unidad de medida | | UC-10 | |
-| 6 | Forma de pago crédito con cuotas | | UC-17 | |
-| 7 | Nota de crédito: tipos disponibles (catálogo 09) | | UC-03 | |
-| 8 | Nota de débito: tipos disponibles (catálogo 10) | | UC-04 | |
-| 9 | Anulación / comunicación de baja | | UC-08 | |
-| 10 | Resumen diario de boletas (¿automático o manual?) | | UC-07 | |
-| 11 | Estados del comprobante y descarga de XML / CDR / PDF | | UC-09 | |
-| 12 | Envío por correo al cliente | | UC-14 | |
-| 13 | Gestión de series y establecimientos | | UC-11 | |
-| 14 | Reportes disponibles | | UC-15, UC-26 | |
-| 15 | Productos, clientes, compras y proveedores | | UC-10, UC-25 | |
+| 1 | Menú principal | Sí | Comprobantes, Anulaciones, Resúmenes diarios, Compras, Entidades (clientes y proveedores), Catálogo, Categorías, Reportes, Guías, Retenciones / Percepciones, Contingencia, Integración API, Configuración (empresa, usuarios, locales y series, formato, cuentas bancarias). | Catálogo de la sección 3 |
+| 2 | Formulario de factura | Parcial | Comprobantes → Emitir Factura Electrónica: entidad, tipo de operación, ítems, tipo de IGV. Permite guardar como **borrador** y enviarlo después. | UC-01 · estado `BORRADOR` |
+| 3 | Validación de RUC y autocompletado | Sí | Al ingresar un RUC ofrece "importar los datos desde SUNAT". | UC-05 · SPEC-004 |
+| 4 | Boleta con cliente "varios" y umbral S/ 700 | No verificado | El artículo solo indica Comprobantes → Emitir Boleta de Venta Electrónica. | UC-02 · SPEC-001 R-04 |
+| 5 | Ítems: afectación IGV, ISC, ICBPER, unidad | Parcial | Tipo de IGV por ítem; unidades de medida configurables; precio con y sin IGV. ISC e ICBPER no figuran en el texto. | UC-10 · SPEC-003 |
+| 6 | Forma de pago crédito con cuotas | No verificado | No figura en el centro de ayuda. | UC-17 · SPEC-001 R-06 |
+| 7 | Nota de crédito | Parcial | Desde Comprobantes o desde Opciones del comprobante original; casos: descuento y anulación. También sobre comprobantes **físicos** o de **otro sistema**. | UC-03 · **UC-28** |
+| 8 | Nota de débito | Parcial | Mismo flujo que la nota de crédito; tipos no listados en el texto. | UC-04 · SPEC-002 |
+| 9 | Anulación / comunicación de baja | Sí | Requiere CDR **aceptado**; plazo **7 días** desde la emisión; desde el comprobante o el panel Anulaciones; vencido el plazo se emite nota de crédito. | UC-08 · SPEC-008 R-04 |
+| 10 | Resumen diario de boletas | Sí | Se genera **automáticamente cada 24 horas**; estado SUNAT visible por colores. | UC-07 · SPEC-008 R-02 |
+| 11 | Estados y descarga de XML / CDR / PDF | Parcial | Estado SUNAT visible en resúmenes y comprobantes; la descarga de XML/CDR no figura en el texto. | UC-09 · SPEC-007 |
+| 12 | Envío al cliente | Sí | Solo por **correo**, al registrado o a otro, y solo si SUNAT ya aceptó el comprobante. | UC-14 |
+| 13 | Series y establecimientos | Sí | Configuración → Locales y series: código SUNAT del local (`0000` si hay uno), ubigeo, usuario encargado; series F (facturas y sus notas), B (boletas y sus notas), T y V (guías). | UC-11 · SPEC-005 R-01 · matriz T-15 |
+| 14 | Reportes | Sí | Excel por rango de fechas, por **ítems** o por **documentos**, de un local o de todos. | UC-15 · UC-26 |
+| 15 | Productos, clientes, compras y proveedores | Sí | Catálogo con categorías; Entidades (clientes y proveedores); Compras → Agregar compra, exportable a Excel. No se menciona control de stock. | UC-10 · UC-25 |
+| 16 | Contingencia | Sí | Comprobante de contingencia cuando no se puede emitir electrónicamente por causas no imputables al emisor. | **UC-27** |
+
+**Conclusiones**
+
+- De 16 puntos: **9 confirmados**, **5 parciales** (2, 5, 7, 8, 11) y **2 no verificados** (4, 6). Ninguno contradice el catálogo; los hallazgos nuevos se agregaron como **UC-27** y **UC-28**.
+- Según su documentación, Nubefact **no controla stock**: el inventario integrado a ventas (SPEC-010) y la migración del legado (SPEC-009) son necesidades propias de ABC.
+- Los puntos parciales y no verificados se completarían con una cuenta registrada con RUC.
 
 ## 8. Referencias
 
@@ -169,3 +180,4 @@ Completar al revisar la cuenta DEMO (marcar Sí / No y anotar lo nuevo):
 - [F2] Nubefact — "¿Tu factura electrónica fue rechazada por SUNAT? Conoce los motivos y qué hacer": <https://www.nubefact.com/blog/facturacion-electronica/tu-factura-electronica-fue-rechazada-por-sunat-conoce-los-motivos-y-que-hacer>
 - [F3] Errores frecuentes reportados por proveedores: <https://bizlinks.com.pe/errores-frecuentes-en-la-facturacion-electronica-sunat/>, <https://acepta.com/pe/blog/errores-en-facturacion-electronica/>, <https://perusoftware.net.pe/blog/errores-sunat-codigos-significado-solucion>, <https://www.nubefact.com/codigos-error-sunat>
 - [F4] kom.pe — "Cómo emitir boletas y facturas SUNAT desde WooCommerce": <https://kom.pe/como-emitir-boletas-y-facturas-sunat-desde-woocommerce/>
+- [F5] Centro de ayuda de Nubefact — preguntas frecuentes de NubeFact Web: <https://ayuda.nubefact.com/preguntas/nubefact-web>. Artículos usados: emitir factura, emitir boleta, emitir nota de crédito / débito, en qué momento generar una nota de crédito, anular / comunicar de baja una factura, plazos de baja, resúmenes diarios automáticos, locales y series, catálogo de productos, compras, reportes, envío al cliente y contingencia.

@@ -11,7 +11,7 @@ escribir lógica de negocio. No contiene código de implementación.
 | **Entender** | Análisis del caso: el legado es un control de almacén (`fecha, ingreso, salida, producto, nro_documento`) sin validación de RUC, cálculo de tributos, XML UBL ni conexión con SUNAT/OSE. Base normativa: RS 097-2012, RS 234-2006, catálogos SUNAT (énfasis en el **catálogo 08 — ISC**) y UBL 2.1 con personalización SUNAT. |
 | **Planificar** | 12 specs funcionales derivadas de cada vacío del enunciado, 3 decisiones de arquitectura (ADR) y estructura `docs/` + `specs/`. |
 | **Actuar** | 4 entregables del examen + casos de uso (contrastados con Nubefact), migración del legado, 12 JSON Schemas, 11 catálogos, contrato OpenAPI y factura XML UBL SUNAT de ejemplo. |
-| **Validar** | Script automático con 442 verificaciones, lint de OpenAPI, renderizado de los 10 diagramas y validación de los XML contra el XSD oficial UBL 2.1. Corrigió 2 errores de cálculo en el ejemplo de factura. |
+| **Validar** | Script automático con 451 verificaciones, lint de OpenAPI, renderizado de los 10 diagramas y validación de los XML en dos capas: estructura (XSD oficial UBL 2.1) y contenido SUNAT (catálogos, RUC, aritmética y cruce con el JSON). Corrigió 2 errores de cálculo en el ejemplo de factura. |
 
 **Decisiones clave**
 
@@ -62,8 +62,12 @@ ADR: [001 Stack](docs/adr/001-stack-multiplataforma.md) ·
 npm install
 npm run validate        # esquemas, ejemplos, aritmética SPEC-003, matriz, enlaces y lint OpenAPI
 npm run check:mermaid   # renderiza los diagramas (usa Chrome/Edge instalado o CHROME_PATH)
-npm run check:xsd       # valida los XML de specs/ref/ contra el XSD oficial UBL 2.1 (requiere JDK 11+)
+npm run check:xsd       # capa ESTRUCTURA: XML contra el XSD oficial UBL 2.1 de OASIS (requiere JDK 11+)
+npm run check:sunat     # capa CONTENIDO: códigos SUNAT, RUC, aritmética y cruce XML ↔ JSON (incluido en validate)
 ```
+
+UBL 2.1 de OASIS da la estructura y la personalización SUNAT define los valores para Perú; por eso
+los XML se validan contra ambas capas (detalle en [specs/ref/](specs/ref/README.md)).
 
 ## 5. Trabajo a futuro
 
@@ -71,5 +75,5 @@ A futuro se propone realizar lo siguiente:
 
 - Confirmar contra la norma vigente los plazos de envío y baja, el umbral de boletas (S/ 700) y el ICBPER (S/ 0.50).
 - Reemplazar las tasas ISC ilustrativas del ejemplo por las tasas vigentes.
-- Contrastar los casos de uso con un usuario DEMO de Nubefact.
+- Completar con una cuenta Nubefact registrada (requiere RUC) los 7 puntos parciales o no verificados de la sección 7 de los casos de uso.
 - Detallar el resumen diario y la comunicación de baja (SPEC-008) y el catálogo completo de errores SUNAT.
