@@ -63,9 +63,11 @@ npm run validate        # esquemas, ejemplos, aritmética SPEC-003, matriz, enla
 npm run check:mermaid   # renderiza los diagramas (usa Chrome/Edge instalado o CHROME_PATH)
 ```
 
-## 5. Pendientes para la siguiente fase
+## 5. Trabajo a futuro
 
-- Confirmar contra la norma vigente: plazos de envío y baja, umbral de boletas (S/ 700) e ICBPER (S/ 0.50).
-- Las tasas ISC del ejemplo son ilustrativas.
+A futuro se propone realizar lo siguiente:
+
+- Confirmar contra la norma vigente los plazos de envío y baja, el umbral de boletas (S/ 700) y el ICBPER (S/ 0.50).
+- Reemplazar las tasas ISC ilustrativas del ejemplo por las tasas vigentes.
 - Contrastar los casos de uso con un usuario DEMO de Nubefact.
-- Detallar resumen diario y baja (SPEC-008) y el catálogo completo de errores SUNAT.
+- Detallar el resumen diario y la comunicación de baja (SPEC-008) y el catálogo completo de errores SUNAT.

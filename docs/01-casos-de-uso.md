@@ -2,7 +2,7 @@
 
 Fuente: funcionalidades habituales de los emisores electrónicos del mercado peruano (Nubefact,
 SEE-SOL de SUNAT) y necesidades propias de una distribuidora de abarrotes.
-**Pendiente:** contrastar este catálogo con un usuario DEMO de Nubefact.
+A futuro se contrastará este catálogo con un usuario DEMO de Nubefact.
 
 ## 1. Actores
 
