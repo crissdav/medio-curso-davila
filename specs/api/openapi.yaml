@@ -1,0 +1,637 @@
+openapi: 3.1.0
+info:
+  title: ABC Facturación Electrónica — API
+  version: 0.1.0-spec
+  summary: Contratos del monolito MVC (fase Spec-First).
+  description: |
+    Contratos REST que exponen los **controladores MVC** del monolito.
+    Cada operación invoca un **caso de uso** (puerto de entrada) del núcleo de dominio,
+    de modo que al migrar a Hexagonal / microservicios el contrato no cambia
+    (ver docs/03-arquitectura.md).
+
+    Convenciones:
+    - Montos como string decimal (ver specs/schemas/common.schema.json).
+    - Errores en formato `application/problem+json` (RFC 9457).
+    - Las operaciones de emisión exigen cabecera `Idempotency-Key` para no consumir dos correlativos
+      ante un reintento del cliente (SPEC-005).
+servers:
+  - url: https://api.abc-software.pe/api/v1
+    description: Monolito (producción)
+  - url: https://qa.abc-software.pe/api/v1
+    description: Pruebas (OSE / SUNAT beta)
+security:
+  - bearerAuth: []
+tags:
+  - name: Comprobantes
+    description: SPEC-001 Factura y Boleta
+  - name: Notas
+    description: SPEC-002 Notas de crédito y débito
+  - name: Tributos
+    description: SPEC-003 Cálculo de tributos
+  - name: Contribuyentes
+    description: SPEC-004 Validación de identidad
+  - name: Series
+    description: SPEC-005 Series y correlativos
+  - name: Envios
+    description: SPEC-007 / SPEC-008 Envío a SUNAT u OSE, resumen y baja
+  - name: Inventario
+    description: SPEC-010 Inventario
+  - name: Migracion
+    description: SPEC-009 Migración de datos legados
+  - name: Catalogos
+    description: SPEC-011 Catálogos SUNAT
+
+paths:
+  /comprobantes:
+    post:
+      tags: [Comprobantes]
+      operationId: emitirComprobante
+      summary: Emitir factura o boleta
+      description: |
+        Caso de uso `EmitirComprobanteUseCase`. Valida (SPEC-004), calcula tributos (SPEC-003),
+        asigna correlativo (SPEC-005), genera y firma el XML (SPEC-006) y lo envía (SPEC-007).
+        Si SUNAT u OSE no responde, devuelve 202 con estado `PENDIENTE_ENVIO`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/comprobante.schema.json#/$defs/EmitirComprobanteRequest'
+            examples:
+              facturaAbarrotes:
+                $ref: '#/components/examples/FacturaRequest'
+      responses:
+        '201':
+          description: Comprobante emitido y con CDR (ACEPTADO u OBSERVADO).
+          headers:
+            Location:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/comprobante.schema.json#/$defs/Comprobante'
+              examples:
+                facturaAceptada:
+                  $ref: '#/components/examples/FacturaResponse'
+        '202':
+          description: Comprobante firmado; envío pendiente (SUNAT u OSE no disponible).
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/comprobante.schema.json#/$defs/Comprobante'
+        '400': { $ref: '#/components/responses/Validacion' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '422': { $ref: '#/components/responses/RechazoSunat' }
+    get:
+      tags: [Comprobantes]
+      operationId: listarComprobantes
+      summary: Listar y filtrar comprobantes
+      parameters:
+        - { name: tipo, in: query, schema: { $ref: '../schemas/common.schema.json#/$defs/TipoComprobante' } }
+        - { name: estado, in: query, schema: { $ref: '../schemas/common.schema.json#/$defs/EstadoComprobante' } }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - { name: cliente, in: query, description: Número de documento del cliente, schema: { type: string } }
+        - $ref: '#/components/parameters/Pagina'
+        - $ref: '#/components/parameters/Tamanio'
+      responses:
+        '200':
+          description: Página de comprobantes.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contenido, total]
+                properties:
+                  contenido:
+                    type: array
+                    items: { $ref: '../schemas/comprobante.schema.json#/$defs/Comprobante' }
+                  total: { type: integer }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+
+  /comprobantes/{id}:
+    get:
+      tags: [Comprobantes]
+      operationId: obtenerComprobante
+      summary: Obtener comprobante con estado y CDR
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200':
+          description: Comprobante.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/comprobante.schema.json#/$defs/Comprobante' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /comprobantes/{id}/xml:
+    get:
+      tags: [Comprobantes]
+      operationId: descargarXml
+      summary: Descargar XML UBL 2.1 firmado
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200':
+          description: XML firmado (nombre RUC-TIPO-SERIE-CORRELATIVO.xml).
+          content:
+            application/xml:
+              schema: { type: string }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /comprobantes/{id}/cdr:
+    get:
+      tags: [Comprobantes]
+      operationId: descargarCdr
+      summary: Descargar CDR (ZIP con ApplicationResponse)
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200':
+          description: CDR.
+          content:
+            application/zip:
+              schema: { type: string, contentEncoding: base64 }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /comprobantes/{id}/pdf:
+    get:
+      tags: [Comprobantes]
+      operationId: descargarPdf
+      summary: Representación impresa (A4 o ticket 80 mm)
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - { name: formato, in: query, schema: { type: string, enum: [A4, TICKET], default: A4 } }
+      responses:
+        '200':
+          description: PDF con código QR y hash.
+          content:
+            application/pdf:
+              schema: { type: string, contentEncoding: base64 }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /comprobantes/{id}/reenvios:
+    post:
+      tags: [Envios]
+      operationId: reenviarComprobante
+      summary: Reenviar comprobante pendiente o con excepción
+      description: Solo para estados `PENDIENTE_ENVIO` o CDR con resultado `EXCEPCION`. Nunca regenera correlativo.
+      parameters: [ { $ref: '#/components/parameters/Id' } ]
+      responses:
+        '200':
+          description: Resultado del reenvío.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/respuesta-cdr.schema.json' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /notas:
+    post:
+      tags: [Notas]
+      operationId: emitirNota
+      summary: Emitir nota de crédito (07) o débito (08)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '../schemas/nota.schema.json' }
+            examples:
+              devolucion:
+                $ref: '#/components/examples/NotaCreditoRequest'
+      responses:
+        '201':
+          description: Nota emitida.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/comprobante.schema.json#/$defs/Comprobante' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '422': { $ref: '#/components/responses/RechazoSunat' }
+
+  /tributos/calculos:
+    post:
+      tags: [Tributos]
+      operationId: calcularTributos
+      summary: Calcular tributos y totales sin emitir (vista previa)
+      description: Caso de uso `CalcularTributosUseCase`. Sin efectos secundarios; no consume correlativo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                fechaEmision: { $ref: '../schemas/common.schema.json#/$defs/Fecha' }
+                items:
+                  type: array
+                  minItems: 1
+                  items: { $ref: '../schemas/linea.schema.json#/$defs/LineaSolicitud' }
+                descuentoGlobal: { $ref: '../schemas/common.schema.json#/$defs/Monto' }
+      responses:
+        '200':
+          description: Líneas calculadas y totales.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, totales]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '../schemas/linea.schema.json#/$defs/LineaCalculada' }
+                  totales: { $ref: '../schemas/comprobante.schema.json#/$defs/Totales' }
+        '400': { $ref: '#/components/responses/Validacion' }
+
+  /contribuyentes/{ruc}:
+    get:
+      tags: [Contribuyentes]
+      operationId: consultarContribuyente
+      summary: Validar RUC y consultar padrón (estado y condición)
+      parameters:
+        - name: ruc
+          in: path
+          required: true
+          schema: { $ref: '../schemas/common.schema.json#/$defs/Ruc' }
+      responses:
+        '200':
+          description: Contribuyente encontrado.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Contribuyente' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /documentos-identidad/validaciones:
+    post:
+      tags: [Contribuyentes]
+      operationId: validarDocumentoIdentidad
+      summary: Validar formato y dígito verificador de un documento (catálogo 06)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tipoDocumento, numeroDocumento]
+              properties:
+                tipoDocumento: { $ref: '../schemas/common.schema.json#/$defs/TipoDocumentoIdentidad' }
+                numeroDocumento: { type: string }
+      responses:
+        '200':
+          description: Resultado.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [valido]
+                properties:
+                  valido: { type: boolean }
+                  motivo: { type: string }
+        '400': { $ref: '#/components/responses/Validacion' }
+
+  /series:
+    get:
+      tags: [Series]
+      operationId: listarSeries
+      summary: Listar series y último correlativo
+      responses:
+        '200':
+          description: Series.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Serie' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+    post:
+      tags: [Series]
+      operationId: crearSerie
+      summary: Registrar una serie para un tipo de comprobante y establecimiento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Serie' }
+      responses:
+        '201':
+          description: Serie creada.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Serie' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /resumenes-diarios:
+    post:
+      tags: [Envios]
+      operationId: enviarResumenDiario
+      summary: Generar y enviar resumen diario (RC) de boletas de una fecha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fechaReferencia]
+              properties:
+                fechaReferencia: { $ref: '../schemas/common.schema.json#/$defs/Fecha' }
+      responses:
+        '202':
+          description: Enviado; SUNAT devuelve ticket para consulta asíncrona.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ticket' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /comunicaciones-baja:
+    post:
+      tags: [Envios]
+      operationId: comunicarBaja
+      summary: Comunicar baja (RA) de comprobantes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '../schemas/comunicacion-baja.schema.json' }
+      responses:
+        '202':
+          description: Enviado; ticket para consulta asíncrona.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ticket' }
+        '400': { $ref: '#/components/responses/Validacion' }
+
+  /tickets/{ticket}:
+    get:
+      tags: [Envios]
+      operationId: consultarTicket
+      summary: Consultar estado de un envío asíncrono (resumen o baja)
+      parameters:
+        - { name: ticket, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Estado del ticket.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/respuesta-cdr.schema.json' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /productos:
+    get:
+      tags: [Inventario]
+      operationId: listarProductos
+      summary: Listar productos con su configuración tributaria
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - $ref: '#/components/parameters/Pagina'
+        - $ref: '#/components/parameters/Tamanio'
+      responses:
+        '200':
+          description: Productos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '../schemas/producto.schema.json' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+    post:
+      tags: [Inventario]
+      operationId: crearProducto
+      summary: Registrar producto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '../schemas/producto.schema.json' }
+      responses:
+        '201':
+          description: Creado.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/producto.schema.json' }
+        '400': { $ref: '#/components/responses/Validacion' }
+
+  /inventario/movimientos:
+    get:
+      tags: [Inventario]
+      operationId: listarMovimientos
+      summary: Kardex de movimientos (incluye los migrados del legado)
+      parameters:
+        - { name: producto, in: query, schema: { type: string } }
+        - { name: origen, in: query, schema: { type: string, enum: [NUEVO, LEGADO] } }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: Movimientos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '../schemas/movimiento-inventario.schema.json' }
+        '400': { $ref: '#/components/responses/Validacion' }
+    post:
+      tags: [Inventario]
+      operationId: registrarMovimiento
+      summary: Registrar ingreso, salida manual o ajuste
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '../schemas/movimiento-inventario.schema.json' }
+      responses:
+        '201':
+          description: Registrado.
+        '400': { $ref: '#/components/responses/Validacion' }
+
+  /migraciones:
+    post:
+      tags: [Migracion]
+      operationId: iniciarMigracion
+      summary: Cargar un lote del sistema legado (CSV o JSON)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [archivo]
+              properties:
+                archivo: { type: string, contentMediaType: text/csv }
+                simulacion:
+                  type: boolean
+                  default: true
+                  description: true = solo valida y reporta (dry-run), sin persistir.
+      responses:
+        '202':
+          description: Lote aceptado para proceso.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoteMigracion' }
+        '400': { $ref: '#/components/responses/Validacion' }
+
+  /migraciones/{lote}:
+    get:
+      tags: [Migracion]
+      operationId: obtenerLoteMigracion
+      summary: Estado y conciliación del lote
+      parameters:
+        - { name: lote, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Lote.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoteMigracion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /migraciones/{lote}/incidencias:
+    get:
+      tags: [Migracion]
+      operationId: listarIncidenciasMigracion
+      summary: Filas en cuarentena con su motivo
+      parameters:
+        - { name: lote, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Incidencias.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [filaOrigen, regla, mensaje]
+                  properties:
+                    filaOrigen: { type: integer }
+                    regla: { type: string, examples: [SPEC-009/M-03] }
+                    mensaje: { type: string }
+                    datoOriginal: { $ref: '../schemas/legacy-movimiento.schema.json' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /catalogos/{numero}:
+    get:
+      tags: [Catalogos]
+      operationId: obtenerCatalogo
+      summary: Obtener un catálogo SUNAT
+      parameters:
+        - { name: numero, in: path, required: true, schema: { type: string, enum: ['01', '02', '03', '05', '06', '07', '08', '09', '10', '16', '51'] } }
+      responses:
+        '200':
+          description: Catálogo.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/catalogo.schema.json' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: UUID generado por el cliente; el mismo valor devuelve el mismo comprobante sin consumir otro correlativo.
+      schema: { type: string, format: uuid }
+    Pagina:
+      name: pagina
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+    Tamanio:
+      name: tamanio
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+  schemas:
+    Contribuyente:
+      type: object
+      required: [ruc, razonSocial, estado, condicion]
+      properties:
+        ruc: { $ref: '../schemas/common.schema.json#/$defs/Ruc' }
+        razonSocial: { type: string }
+        estado: { type: string, examples: [ACTIVO, BAJA DE OFICIO, SUSPENSION TEMPORAL] }
+        condicion: { type: string, examples: [HABIDO, NO HABIDO] }
+        direccion: { type: string }
+        ubigeo: { type: string }
+        consultadoEn: { type: string, format: date-time }
+        fuente: { type: string, enum: [PADRON_LOCAL, SERVICIO_EXTERNO] }
+    Serie:
+      type: object
+      required: [tipoComprobante, serie, establecimiento]
+      properties:
+        tipoComprobante: { $ref: '../schemas/common.schema.json#/$defs/TipoComprobante' }
+        serie: { $ref: '../schemas/common.schema.json#/$defs/Serie' }
+        establecimiento: { type: string, pattern: '^[0-9]{4}$' }
+        ultimoCorrelativo: { type: integer, minimum: 0, readOnly: true }
+        activa: { type: boolean, default: true }
+    Ticket:
+      type: object
+      required: [ticket, identificador]
+      properties:
+        ticket: { type: string }
+        identificador: { type: string, examples: [RC-20261022-1, RA-20261022-1] }
+    LoteMigracion:
+      type: object
+      required: [lote, estado, simulacion]
+      properties:
+        lote: { type: string, examples: [MIG-2026-10-001] }
+        estado: { type: string, enum: [RECIBIDO, PROCESANDO, COMPLETADO, COMPLETADO_CON_INCIDENCIAS, FALLIDO] }
+        simulacion: { type: boolean }
+        filasLeidas: { type: integer }
+        filasMigradas: { type: integer }
+        filasEnCuarentena: { type: integer }
+        conciliacion:
+          type: object
+          description: Totales de control origen vs destino (deben cuadrar).
+          properties:
+            sumaIngresosOrigen: { type: string }
+            sumaIngresosDestino: { type: string }
+            sumaSalidasOrigen: { type: string }
+            sumaSalidasDestino: { type: string }
+  responses:
+    NoAutorizado:
+      description: Token ausente, vencido o sin el rol requerido.
+      content:
+        application/problem+json:
+          schema: { $ref: '../schemas/error.schema.json' }
+    Validacion:
+      description: Error de validación de la solicitud o de una regla de negocio.
+      content:
+        application/problem+json:
+          schema: { $ref: '../schemas/error.schema.json' }
+    Conflicto:
+      description: Conflicto de estado (serie duplicada, comprobante ya enviado, etc.).
+      content:
+        application/problem+json:
+          schema: { $ref: '../schemas/error.schema.json' }
+    NoEncontrado:
+      description: Recurso no encontrado.
+      content:
+        application/problem+json:
+          schema: { $ref: '../schemas/error.schema.json' }
+    RechazoSunat:
+      description: SUNAT u OSE rechazó el comprobante (códigos 2000-3999). El correlativo queda consumido.
+      content:
+        application/problem+json:
+          schema: { $ref: '../schemas/error.schema.json' }
+  examples:
+    FacturaRequest:
+      summary: Factura de abarrotes con ISC (cat. 08) e ICBPER
+      externalValue: ../schemas/examples/factura-request.json
+    FacturaResponse:
+      summary: Factura aceptada
+      externalValue: ../schemas/examples/factura-response.json
+    NotaCreditoRequest:
+      summary: Nota de crédito por devolución de ítem
+      externalValue: ../schemas/examples/nota-credito-request.json

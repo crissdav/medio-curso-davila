@@ -1,0 +1,13 @@
+{
+  "numero": "10",
+  "nombre": "Códigos de tipo de nota de débito electrónica",
+  "listAgencyName": "PE:SUNAT",
+  "listURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo10",
+  "codigos": [
+    { "codigo": "01", "descripcion": "Intereses por mora" },
+    { "codigo": "02", "descripcion": "Aumento en el valor" },
+    { "codigo": "03", "descripcion": "Penalidades / otros conceptos" },
+    { "codigo": "11", "descripcion": "Ajustes de operaciones de exportación" },
+    { "codigo": "12", "descripcion": "Ajustes afectos al IVAP" }
+  ]
+}

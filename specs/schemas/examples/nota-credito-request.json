@@ -1,0 +1,20 @@
+{
+  "tipoComprobante": "07",
+  "serie": "F001",
+  "fechaEmision": "2026-10-23",
+  "documentoAfectado": { "tipoComprobante": "01", "numero": "F001-00000123" },
+  "tipoNota": "07",
+  "motivo": "Devolución de 2 gaseosas con envase dañado",
+  "moneda": "PEN",
+  "items": [
+    {
+      "codigoProducto": "GAS-3L",
+      "descripcion": "Gaseosa 3 L",
+      "cantidad": "2",
+      "unidadMedida": "NIU",
+      "valorUnitario": "8.00",
+      "afectacionIgv": "10",
+      "isc": { "sistema": "01", "tasa": "0.17" }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "numero": "08",
+  "nombre": "Código de tipos de sistema de cálculo del ISC",
+  "listAgencyName": "PE:SUNAT",
+  "listURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo08",
+  "ublXPath": "cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID='2000']/cac:TaxCategory/cbc:TierRange",
+  "codigos": [
+    {
+      "codigo": "01",
+      "descripcion": "Sistema al valor (Apéndice IV, lit. A – T.U.O IGV e ISC)",
+      "formula": "ISC = valorVentaItem × tasaISC",
+      "ejemploAbarrotes": "Gaseosas y bebidas azucaradas (tasa según contenido de azúcar)"
+    },
+    {
+      "codigo": "02",
+      "descripcion": "Aplicación del Monto Fijo (Apéndice IV, lit. B – T.U.O IGV e ISC)",
+      "formula": "ISC = cantidad × montoFijoPorUnidad",
+      "ejemploAbarrotes": "Cervezas (por litro), cigarrillos (por unidad)"
+    },
+    {
+      "codigo": "03",
+      "descripcion": "Sistema de Precios de Venta al Público (Apéndice IV, lit. C – T.U.O IGV e ISC)",
+      "formula": "ISC = cantidad × (precioVentaPublicoSugerido / (1 + tasaIGV)) × tasaISC",
+      "ejemploAbarrotes": "Productos con precio sugerido al público fijado por el fabricante"
+    }
+  ]
+}

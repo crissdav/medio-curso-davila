@@ -1,0 +1,14 @@
+{
+  "id": "9b2e7c10-4f3a-4d21-8c5e-1a2b3c4d5e6f",
+  "fecha": "2024-03-05",
+  "tipo": "SALIDA",
+  "codigoProducto": "CER-620",
+  "cantidad": "12",
+  "documentoReferencia": { "tipo": "INTERNO_LEGADO", "numero": "N-0458" },
+  "origen": {
+    "sistema": "LEGADO",
+    "loteMigracion": "MIG-2026-10-001",
+    "filaOrigen": 1834,
+    "hashOrigen": "5d41402abc4b2a76b9719d911017c5925d41402abc4b2a76b9719d911017c592"
+  }
+}

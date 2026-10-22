@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abc-software.pe/specs/schemas/respuesta-cdr.schema.json",
+  "title": "RespuestaCdrDTO",
+  "description": "Constancia de Recepción devuelta por SUNAT u OSE (UBL ApplicationResponse). SPEC-007.",
+  "type": "object",
+  "required": ["codigoRespuesta", "descripcion", "resultado"],
+  "properties": {
+    "resultado": {
+      "type": "string",
+      "enum": ["ACEPTADO", "OBSERVADO", "RECHAZADO", "EXCEPCION"],
+      "description": "Derivado de codigoRespuesta: 0 aceptado; 0100-1999 excepción (reintentable); 2000-3999 rechazado; aceptado con observaciones ≥ 4000."
+    },
+    "codigoRespuesta": { "type": "string", "pattern": "^[0-9]{1,4}$", "description": "cac:DocumentResponse/cac:Response/cbc:ResponseCode" },
+    "descripcion": { "type": "string", "description": "cac:DocumentResponse/cac:Response/cbc:Description" },
+    "observaciones": { "type": "array", "items": { "type": "string" }, "description": "cbc:Note del CDR (códigos ≥ 4000)." },
+    "fechaRecepcion": { "type": "string", "format": "date-time" },
+    "ticket": { "type": "string", "description": "Solo envíos asíncronos (resumen diario / baja)." },
+    "canal": { "type": "string", "enum": ["SUNAT", "OSE"] }
+  },
+  "additionalProperties": false
+}

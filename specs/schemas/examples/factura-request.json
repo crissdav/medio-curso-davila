@@ -1,0 +1,54 @@
+{
+  "tipoComprobante": "01",
+  "serie": "F001",
+  "tipoOperacion": "0101",
+  "fechaEmision": "2026-10-22",
+  "horaEmision": "10:15:00",
+  "moneda": "PEN",
+  "cliente": {
+    "tipoDocumento": "6",
+    "numeroDocumento": "20601234565",
+    "razonSocial": "BODEGA LA ESQUINA S.A.C.",
+    "direccion": "Av. Raymondi 123, Tingo María",
+    "ubigeo": "100601",
+    "correo": "compras@bodegalaesquina.pe"
+  },
+  "items": [
+    {
+      "codigoProducto": "ARR-5KG",
+      "descripcion": "Arroz extra bolsa 5 kg",
+      "cantidad": "10",
+      "unidadMedida": "NIU",
+      "valorUnitario": "20.00",
+      "afectacionIgv": "10"
+    },
+    {
+      "codigoProducto": "CER-620",
+      "descripcion": "Cerveza botella 620 ml",
+      "cantidad": "12",
+      "unidadMedida": "NIU",
+      "valorUnitario": "4.00",
+      "afectacionIgv": "10",
+      "isc": { "sistema": "02", "montoFijo": "1.25" }
+    },
+    {
+      "codigoProducto": "GAS-3L",
+      "descripcion": "Gaseosa 3 L",
+      "cantidad": "6",
+      "unidadMedida": "NIU",
+      "valorUnitario": "8.00",
+      "afectacionIgv": "10",
+      "isc": { "sistema": "01", "tasa": "0.17" }
+    },
+    {
+      "codigoProducto": "BOLSA",
+      "descripcion": "Bolsa plástica",
+      "cantidad": "2",
+      "unidadMedida": "NIU",
+      "valorUnitario": "0.0847",
+      "afectacionIgv": "10",
+      "cantidadBolsasIcbper": 2
+    }
+  ],
+  "formaPago": { "tipo": "Contado" }
+}

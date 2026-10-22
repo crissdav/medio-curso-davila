@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abc-software.pe/specs/schemas/legacy-movimiento.schema.json",
+  "title": "LegacyMovimientoDTO",
+  "description": "Fila tal como existe en el sistema legado de almacén (fuente de la migración, SPEC-009). Se acepta permisivamente porque los datos son informales; la limpieza la hace el proceso de migración.",
+  "type": "object",
+  "required": ["fecha", "producto"],
+  "properties": {
+    "fecha": { "type": ["string", "null"], "description": "Formato libre: dd/mm/aaaa, aaaa-mm-dd, dd-mm-aa…" },
+    "ingreso": { "type": ["number", "string", "null"] },
+    "salida": { "type": ["number", "string", "null"] },
+    "producto": { "type": ["string", "null"] },
+    "nro_documento": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}

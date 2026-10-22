@@ -1,0 +1,15 @@
+{
+  "numero": "06",
+  "nombre": "Código de tipo de documento de identidad",
+  "listAgencyName": "PE:SUNAT",
+  "schemeURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06",
+  "codigos": [
+    { "codigo": "0", "descripcion": "Doc. trib. no domiciliado sin RUC", "patron": "^.{1,15}$" },
+    { "codigo": "1", "descripcion": "DNI", "patron": "^[0-9]{8}$" },
+    { "codigo": "4", "descripcion": "Carnet de extranjería", "patron": "^[A-Za-z0-9]{1,12}$" },
+    { "codigo": "6", "descripcion": "RUC", "patron": "^(10|15|16|17|20)[0-9]{9}$", "validacion": "modulo11" },
+    { "codigo": "7", "descripcion": "Pasaporte", "patron": "^[A-Za-z0-9]{1,12}$" },
+    { "codigo": "A", "descripcion": "Cédula diplomática de identidad", "patron": "^[A-Za-z0-9]{1,15}$" },
+    { "codigo": "-", "descripcion": "Varios — boleta menor al umbral sin identificar al cliente", "patron": "^-?$" }
+  ]
+}

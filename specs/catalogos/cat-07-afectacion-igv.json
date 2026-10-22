@@ -1,0 +1,27 @@
+{
+  "numero": "07",
+  "nombre": "Código de tipo de afectación del IGV",
+  "listAgencyName": "PE:SUNAT",
+  "listURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07",
+  "codigos": [
+    { "codigo": "10", "descripcion": "Gravado - Operación Onerosa", "tributo": "1000", "onerosa": true },
+    { "codigo": "11", "descripcion": "Gravado - Retiro por premio", "tributo": "9996", "onerosa": false },
+    { "codigo": "12", "descripcion": "Gravado - Retiro por donación", "tributo": "9996", "onerosa": false },
+    { "codigo": "13", "descripcion": "Gravado - Retiro", "tributo": "9996", "onerosa": false },
+    { "codigo": "14", "descripcion": "Gravado - Retiro por publicidad", "tributo": "9996", "onerosa": false },
+    { "codigo": "15", "descripcion": "Gravado - Bonificaciones", "tributo": "9996", "onerosa": false },
+    { "codigo": "16", "descripcion": "Gravado - Retiro por entrega a trabajadores", "tributo": "9996", "onerosa": false },
+    { "codigo": "17", "descripcion": "Gravado - IVAP", "tributo": "1016", "onerosa": true },
+    { "codigo": "20", "descripcion": "Exonerado - Operación Onerosa", "tributo": "9997", "onerosa": true },
+    { "codigo": "21", "descripcion": "Exonerado - Transferencia gratuita", "tributo": "9996", "onerosa": false },
+    { "codigo": "30", "descripcion": "Inafecto - Operación Onerosa", "tributo": "9998", "onerosa": true },
+    { "codigo": "31", "descripcion": "Inafecto - Retiro por bonificación", "tributo": "9996", "onerosa": false },
+    { "codigo": "32", "descripcion": "Inafecto - Retiro", "tributo": "9996", "onerosa": false },
+    { "codigo": "33", "descripcion": "Inafecto - Retiro por muestras médicas", "tributo": "9996", "onerosa": false },
+    { "codigo": "34", "descripcion": "Inafecto - Retiro por convenio colectivo", "tributo": "9996", "onerosa": false },
+    { "codigo": "35", "descripcion": "Inafecto - Retiro por premio", "tributo": "9996", "onerosa": false },
+    { "codigo": "36", "descripcion": "Inafecto - Retiro por publicidad", "tributo": "9996", "onerosa": false },
+    { "codigo": "37", "descripcion": "Inafecto - Transferencia gratuita", "tributo": "9996", "onerosa": false },
+    { "codigo": "40", "descripcion": "Exportación de bienes o servicios", "tributo": "9995", "onerosa": true }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "numero": "16",
+  "nombre": "Código de tipo de precio de venta unitario",
+  "listAgencyName": "PE:SUNAT",
+  "listURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16",
+  "codigos": [
+    { "codigo": "01", "descripcion": "Precio unitario (incluye el IGV)" },
+    { "codigo": "02", "descripcion": "Valor referencial unitario en operaciones no onerosas" }
+  ]
+}

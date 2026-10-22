@@ -1,0 +1,5 @@
+extends:
+  - recommended
+rules:
+  # API interna de ABC: no se publica bajo ninguna licencia.
+  info-license: off

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abc-software.pe/specs/schemas/comunicacion-baja.schema.json",
+  "title": "ComunicacionBajaDTO",
+  "description": "Comunicación de baja (RA) de comprobantes aceptados que no debieron emitirse. SPEC-008. Esqueleto: se detallará en fase 2.",
+  "type": "object",
+  "required": ["fechaReferencia", "documentos"],
+  "properties": {
+    "fechaReferencia": { "$ref": "common.schema.json#/$defs/Fecha", "description": "Fecha de emisión de los comprobantes dados de baja." },
+    "documentos": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["tipoComprobante", "numero", "motivo"],
+        "properties": {
+          "tipoComprobante": { "$ref": "common.schema.json#/$defs/TipoComprobante" },
+          "numero": { "$ref": "common.schema.json#/$defs/NumeroComprobante" },
+          "motivo": { "type": "string", "minLength": 1, "maxLength": 100 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
