@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abc-software.pe/specs/schemas/invoice.schema.json",
+  "title": "InvoiceDTO (Invoice / Sales receipt)",
+  "description": "Issuance contracts for the Invoice (01, factura) and the Sales receipt (03, boleta). SPEC-001. UBL root: Invoice (UBL-Invoice-2.1.xsd).",
+  "$defs": {
+    "PaymentTerms": {
+      "description": "UBL: cac:PaymentTerms[cbc:ID='FormaPago'] (RS 000193-2020/SUNAT). The values Contado / Credito are the literal SUNAT values.",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "enum": ["Contado", "Credito"], "description": "Contado = cash, Credito = credit." },
+        "pendingAmount": { "$ref": "common.schema.json#/$defs/Amount" },
+        "installments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["amount", "dueDate"],
+            "properties": {
+              "amount": { "$ref": "common.schema.json#/$defs/Amount" },
+              "dueDate": { "$ref": "common.schema.json#/$defs/Date" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "if": { "properties": { "type": { "const": "Credito" } } },
+      "then": { "required": ["pendingAmount", "installments"] },
+      "additionalProperties": false
+    },
+    "IssueInvoiceRequest": {
+      "type": "object",
+      "required": ["documentType", "series", "operationType", "issueDate", "currency", "customer", "items", "paymentTerms"],
+      "properties": {
+        "documentType": { "type": "string", "enum": ["01", "03"] },
+        "series": { "$ref": "common.schema.json#/$defs/Series" },
+        "operationType": { "$ref": "common.schema.json#/$defs/OperationType" },
+        "issueDate": { "$ref": "common.schema.json#/$defs/Date" },
+        "issueTime": { "$ref": "common.schema.json#/$defs/Time" },
+        "dueDate": { "$ref": "common.schema.json#/$defs/Date" },
+        "currency": { "$ref": "common.schema.json#/$defs/Currency" },
+        "exchangeRate": { "type": "string", "pattern": "^[0-9]{1,4}\\.[0-9]{1,3}$" },
+        "customer": { "$ref": "customer.schema.json" },
+        "items": { "type": "array", "minItems": 1, "maxItems": 500, "items": { "$ref": "line.schema.json#/$defs/LineRequest" } },
+        "globalDiscount": { "$ref": "common.schema.json#/$defs/Amount" },
+        "paymentTerms": { "$ref": "#/$defs/PaymentTerms" },
+        "notes": { "type": "string", "maxLength": 500 },
+        "establishment": { "type": "string", "pattern": "^[0-9]{4}$", "default": "0000", "description": "SUNAT annex establishment code." }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "documentType": { "const": "01" } } },
+          "then": {
+            "properties": {
+              "series": { "pattern": "^F" },
+              "customer": { "properties": { "documentType": { "const": "6" } } }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "documentType": { "const": "03" } } },
+          "then": { "properties": { "series": { "pattern": "^B" } } }
+        },
+        {
+          "if": { "properties": { "currency": { "not": { "const": "PEN" } } } },
+          "then": { "required": ["exchangeRate"] }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "Totals": {
+      "description": "UBL: cac:TaxTotal and cac:LegalMonetaryTotal.",
+      "type": "object",
+      "required": ["taxedTotal", "exemptTotal", "unaffectedTotal", "freeTotal", "iscTotal", "igvTotal", "icbperTotal", "taxTotal", "saleValueTotal", "salePriceTotal", "discountTotal", "payableAmount"],
+      "properties": {
+        "taxedTotal": { "$ref": "common.schema.json#/$defs/Amount" },
+        "exemptTotal": { "$ref": "common.schema.json#/$defs/Amount" },
+        "unaffectedTotal": { "$ref": "common.schema.json#/$defs/Amount" },
+        "exportTotal": { "$ref": "common.schema.json#/$defs/Amount" },
+        "freeTotal": { "$ref": "common.schema.json#/$defs/Amount" },
+        "iscTotal": { "$ref": "common.schema.json#/$defs/Amount" },
+        "igvTotal": { "$ref": "common.schema.json#/$defs/Amount" },
+        "icbperTotal": { "$ref": "common.schema.json#/$defs/Amount" },
+        "taxTotal": { "$ref": "common.schema.json#/$defs/Amount" },
+        "saleValueTotal": { "$ref": "common.schema.json#/$defs/Amount" },
+        "salePriceTotal": { "$ref": "common.schema.json#/$defs/Amount" },
+        "discountTotal": { "$ref": "common.schema.json#/$defs/Amount" },
+        "rounding": { "$ref": "common.schema.json#/$defs/Amount" },
+        "payableAmount": { "$ref": "common.schema.json#/$defs/Amount" },
+        "amountInWords": { "type": "string", "description": "Legally required in Spanish. UBL: cbc:Note[@languageLocaleID='1000'] (catalog 52)." }
+      },
+      "additionalProperties": false
+    },
+    "Invoice": {
+      "description": "Response: issued document with calculated amounts, status and links.",
+      "type": "object",
+      "required": ["id", "documentType", "series", "sequenceNumber", "number", "issueDate", "currency", "issuer", "customer", "items", "totals", "status"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "documentType": { "$ref": "common.schema.json#/$defs/DocumentType" },
+        "series": { "$ref": "common.schema.json#/$defs/Series" },
+        "sequenceNumber": { "$ref": "common.schema.json#/$defs/SequenceNumber" },
+        "number": { "$ref": "common.schema.json#/$defs/DocumentNumber" },
+        "operationType": { "$ref": "common.schema.json#/$defs/OperationType" },
+        "issueDate": { "$ref": "common.schema.json#/$defs/Date" },
+        "issueTime": { "$ref": "common.schema.json#/$defs/Time" },
+        "currency": { "$ref": "common.schema.json#/$defs/Currency" },
+        "issuer": {
+          "type": "object",
+          "required": ["ruc", "legalName"],
+          "properties": {
+            "ruc": { "$ref": "common.schema.json#/$defs/Ruc" },
+            "legalName": { "type": "string" },
+            "tradeName": { "type": "string" },
+            "establishment": { "type": "string", "pattern": "^[0-9]{4}$" }
+          }
+        },
+        "customer": { "$ref": "customer.schema.json" },
+        "items": { "type": "array", "minItems": 1, "items": { "$ref": "line.schema.json#/$defs/CalculatedLine" } },
+        "paymentTerms": { "$ref": "#/$defs/PaymentTerms" },
+        "totals": { "$ref": "#/$defs/Totals" },
+        "status": { "$ref": "common.schema.json#/$defs/DocumentStatus" },
+        "documentHash": { "type": "string", "description": "Signature DigestValue (printed on the document representation)." },
+        "cdr": { "$ref": "cdr-response.schema.json" },
+        "links": {
+          "type": "object",
+          "properties": {
+            "xml": { "type": "string", "format": "uri-reference" },
+            "cdr": { "type": "string", "format": "uri-reference" },
+            "pdf": { "type": "string", "format": "uri-reference" }
+          }
+        }
+      }
+    }
+  },
+  "$ref": "#/$defs/IssueInvoiceRequest"
+}

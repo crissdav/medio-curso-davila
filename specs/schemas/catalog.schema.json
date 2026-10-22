@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abc-software.pe/specs/schemas/catalog.schema.json",
+  "title": "SunatCatalogDTO",
+  "description": "Structure of the files in specs/catalogs/ and of the GET /catalogs/{number} response. SPEC-011.",
+  "type": "object",
+  "required": ["number", "name", "codes"],
+  "properties": {
+    "number": { "type": "string", "pattern": "^[0-9]{2}$" },
+    "name": { "type": "string" },
+    "listAgencyName": { "type": "string" },
+    "listID": { "type": "string" },
+    "listURI": { "type": "string" },
+    "schemeURI": { "type": "string" },
+    "ublXPath": { "type": "string" },
+    "codes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["code", "description", "officialName"],
+        "properties": {
+          "code": { "type": "string" },
+          "description": { "type": "string", "description": "English description." },
+          "officialName": { "type": "string", "description": "Official SUNAT name (Spanish), kept for regulatory fidelity." },
+          "phase": { "type": "integer", "description": "If present, the code is out of scope for phase 1." }
+        }
+      }
+    }
+  }
+}

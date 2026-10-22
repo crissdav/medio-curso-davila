@@ -1,0 +1,11 @@
+{
+  "number": "02",
+  "name": "Currency code (ISO 4217)",
+  "listAgencyName": "United Nations Economic Commission for Europe",
+  "listID": "ISO 4217 Alpha",
+  "codes": [
+    { "code": "PEN", "description": "Peruvian sol", "officialName": "Sol" },
+    { "code": "USD", "description": "US dollar", "officialName": "Dólar americano" },
+    { "code": "EUR", "description": "Euro", "officialName": "Euro" }
+  ]
+}

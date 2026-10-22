@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abc-software.pe/specs/schemas/legacy-movement.schema.json",
+  "title": "LegacyMovementDTO",
+  "description": "Row exactly as it exists in the legacy warehouse system (migration source, SPEC-009). Field names are the real legacy column names and are kept unchanged. Accepted permissively because the data is informal; the migration process cleans it.",
+  "type": "object",
+  "required": ["fecha", "producto"],
+  "properties": {
+    "fecha": { "type": ["string", "null"], "description": "Date, free format: dd/mm/yyyy, yyyy-mm-dd, dd-mm-yy…" },
+    "ingreso": { "type": ["number", "string", "null"], "description": "Quantity received into the warehouse." },
+    "salida": { "type": ["number", "string", "null"], "description": "Quantity shipped out of the warehouse." },
+    "producto": { "type": ["string", "null"], "description": "Free-text product name." },
+    "nro_documento": { "type": ["string", "null"], "description": "Internal document number (not a SUNAT document)." }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abc-software.pe/specs/schemas/voided-documents.schema.json",
+  "title": "VoidedDocumentsDTO",
+  "description": "Voiding communication (RA, comunicación de baja) for accepted documents that should not have been issued. SPEC-008. Skeleton: detailed in phase 2.",
+  "type": "object",
+  "required": ["referenceDate", "documents"],
+  "properties": {
+    "referenceDate": { "$ref": "common.schema.json#/$defs/Date", "description": "Issue date of the voided documents." },
+    "documents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["documentType", "number", "reason"],
+        "properties": {
+          "documentType": { "$ref": "common.schema.json#/$defs/DocumentType" },
+          "number": { "$ref": "common.schema.json#/$defs/DocumentNumber" },
+          "reason": { "type": "string", "minLength": 1, "maxLength": 100 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

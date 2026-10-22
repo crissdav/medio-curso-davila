@@ -1,0 +1,21 @@
+{
+  "number": "09",
+  "name": "Electronic credit note type code",
+  "listAgencyName": "PE:SUNAT",
+  "listURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo09",
+  "codes": [
+    { "code": "01", "description": "Cancellation of the operation", "officialName": "Anulación de la operación" },
+    { "code": "02", "description": "Cancellation due to wrong RUC", "officialName": "Anulación por error en el RUC" },
+    { "code": "03", "description": "Correction of a wrong description", "officialName": "Corrección por error en la descripción" },
+    { "code": "04", "description": "Global discount", "officialName": "Descuento global" },
+    { "code": "05", "description": "Line-item discount", "officialName": "Descuento por ítem" },
+    { "code": "06", "description": "Full return", "officialName": "Devolución total" },
+    { "code": "07", "description": "Line-item return", "officialName": "Devolución por ítem" },
+    { "code": "08", "description": "Bonus", "officialName": "Bonificación" },
+    { "code": "09", "description": "Value decrease", "officialName": "Disminución en el valor" },
+    { "code": "10", "description": "Other concepts", "officialName": "Otros conceptos" },
+    { "code": "11", "description": "Export operation adjustments", "officialName": "Ajustes de operaciones de exportación" },
+    { "code": "12", "description": "IVAP adjustments", "officialName": "Ajustes afectos al IVAP" },
+    { "code": "13", "description": "Adjustments — payment amounts and/or dates", "officialName": "Ajustes – montos y/o fechas de pago" }
+  ]
+}

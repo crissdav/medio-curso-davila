@@ -1,0 +1,27 @@
+{
+  "number": "07",
+  "name": "IGV affectation type code",
+  "listAgencyName": "PE:SUNAT",
+  "listURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07",
+  "codes": [
+    { "code": "10", "description": "Taxed - Onerous operation", "officialName": "Gravado - Operación Onerosa", "tax": "1000", "onerous": true },
+    { "code": "11", "description": "Taxed - Withdrawal as prize", "officialName": "Gravado - Retiro por premio", "tax": "9996", "onerous": false },
+    { "code": "12", "description": "Taxed - Withdrawal as donation", "officialName": "Gravado - Retiro por donación", "tax": "9996", "onerous": false },
+    { "code": "13", "description": "Taxed - Withdrawal", "officialName": "Gravado - Retiro", "tax": "9996", "onerous": false },
+    { "code": "14", "description": "Taxed - Withdrawal for advertising", "officialName": "Gravado - Retiro por publicidad", "tax": "9996", "onerous": false },
+    { "code": "15", "description": "Taxed - Bonuses", "officialName": "Gravado - Bonificaciones", "tax": "9996", "onerous": false },
+    { "code": "16", "description": "Taxed - Withdrawal delivered to workers", "officialName": "Gravado - Retiro por entrega a trabajadores", "tax": "9996", "onerous": false },
+    { "code": "17", "description": "Taxed - IVAP", "officialName": "Gravado - IVAP", "tax": "1016", "onerous": true },
+    { "code": "20", "description": "Exempt - Onerous operation", "officialName": "Exonerado - Operación Onerosa", "tax": "9997", "onerous": true },
+    { "code": "21", "description": "Exempt - Free transfer", "officialName": "Exonerado - Transferencia gratuita", "tax": "9996", "onerous": false },
+    { "code": "30", "description": "Unaffected - Onerous operation", "officialName": "Inafecto - Operación Onerosa", "tax": "9998", "onerous": true },
+    { "code": "31", "description": "Unaffected - Withdrawal as bonus", "officialName": "Inafecto - Retiro por bonificación", "tax": "9996", "onerous": false },
+    { "code": "32", "description": "Unaffected - Withdrawal", "officialName": "Inafecto - Retiro", "tax": "9996", "onerous": false },
+    { "code": "33", "description": "Unaffected - Withdrawal as medical samples", "officialName": "Inafecto - Retiro por muestras médicas", "tax": "9996", "onerous": false },
+    { "code": "34", "description": "Unaffected - Withdrawal by collective agreement", "officialName": "Inafecto - Retiro por convenio colectivo", "tax": "9996", "onerous": false },
+    { "code": "35", "description": "Unaffected - Withdrawal as prize", "officialName": "Inafecto - Retiro por premio", "tax": "9996", "onerous": false },
+    { "code": "36", "description": "Unaffected - Withdrawal for advertising", "officialName": "Inafecto - Retiro por publicidad", "tax": "9996", "onerous": false },
+    { "code": "37", "description": "Unaffected - Free transfer", "officialName": "Inafecto - Transferencia gratuita", "tax": "9996", "onerous": false },
+    { "code": "40", "description": "Export of goods or services", "officialName": "Exportación de bienes o servicios", "tax": "9995", "onerous": true }
+  ]
+}

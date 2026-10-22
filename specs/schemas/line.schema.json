@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abc-software.pe/specs/schemas/line.schema.json",
+  "title": "LineDTO",
+  "description": "Document line item. The request carries the input data; calculated amounts come back in the response (SPEC-003). UBL: cac:InvoiceLine / cac:CreditNoteLine / cac:DebitNoteLine.",
+  "$defs": {
+    "LineRequest": {
+      "$ref": "#/$defs/LineBase",
+      "unevaluatedProperties": false
+    },
+    "LineBase": {
+      "type": "object",
+      "required": ["description", "quantity", "unitOfMeasure", "unitValue", "igvAffectation"],
+      "properties": {
+        "productCode": { "type": "string", "pattern": "^[A-Z0-9-]{1,30}$" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "quantity": { "$ref": "common.schema.json#/$defs/Quantity" },
+        "unitOfMeasure": { "$ref": "common.schema.json#/$defs/UnitOfMeasure" },
+        "unitValue": { "$ref": "common.schema.json#/$defs/UnitAmount", "description": "Before taxes. For free-of-charge operations it is the reference value." },
+        "igvAffectation": { "$ref": "common.schema.json#/$defs/IgvAffectation" },
+        "discount": { "$ref": "common.schema.json#/$defs/Amount", "description": "Discount that reduces the line taxable base." },
+        "isc": { "$ref": "product.schema.json#/$defs/IscConfig" },
+        "icbperBagCount": { "type": "integer", "minimum": 1, "description": "Only if the item is a plastic bag." }
+      }
+    },
+    "CalculatedLine": {
+      "description": "Line with the amounts calculated by the domain.",
+      "allOf": [
+        { "$ref": "#/$defs/LineBase" },
+        {
+          "type": "object",
+          "required": ["lineNumber", "unitPrice", "saleValue", "igvBase", "igv", "totalTaxes"],
+          "properties": {
+            "lineNumber": { "type": "integer", "minimum": 1 },
+            "unitPrice": { "$ref": "common.schema.json#/$defs/UnitAmount", "description": "Taxes included (catalog 16 code 01) or reference value (code 02)." },
+            "saleValue": { "$ref": "common.schema.json#/$defs/Amount", "description": "quantity × unitValue − discount" },
+            "iscBase": { "$ref": "common.schema.json#/$defs/Amount" },
+            "iscAmount": { "$ref": "common.schema.json#/$defs/Amount", "description": "Calculated according to catalog 08." },
+            "igvBase": { "$ref": "common.schema.json#/$defs/Amount", "description": "saleValue + iscAmount" },
+            "igvRate": { "$ref": "common.schema.json#/$defs/Rate" },
+            "igv": { "$ref": "common.schema.json#/$defs/Amount" },
+            "icbper": { "$ref": "common.schema.json#/$defs/Amount" },
+            "totalTaxes": { "$ref": "common.schema.json#/$defs/Amount" }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  },
+  "$ref": "#/$defs/LineRequest"
+}

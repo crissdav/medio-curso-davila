@@ -1,17 +1,17 @@
 {
-  "name": "abc-facturacion-specs",
+  "name": "abc-invoicing-specs",
   "version": "0.1.0",
   "private": true,
-  "description": "Especificaciones Spec-First del sistema de facturación electrónica de ABC Software Corp.",
+  "description": "Spec-First specifications for ABC Software Corp's SUNAT electronic invoicing system.",
   "type": "module",
   "scripts": {
     "validate": "node scripts/validate.mjs && npm run check:sunat && npm run lint:api",
     "validate:specs": "node scripts/validate.mjs",
-    "check:sunat": "node scripts/validar-xml-sunat.mjs",
+    "check:sunat": "node scripts/validate-sunat-xml.mjs",
     "check:ubl": "npm run check:xsd && npm run check:sunat",
     "lint:api": "redocly lint specs/api/openapi.yaml --config redocly.yaml",
     "check:mermaid": "node scripts/check-mermaid.mjs",
-    "check:xsd": "java -Dstdout.encoding=UTF-8 scripts/ValidarXsd.java"
+    "check:xsd": "java -Dstdout.encoding=UTF-8 scripts/ValidateXsd.java"
   },
   "devDependencies": {
     "@redocly/cli": "1.34.3",

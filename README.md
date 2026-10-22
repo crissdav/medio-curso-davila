@@ -1,79 +1,88 @@
-# ABC Software Corp — Facturación Electrónica SUNAT (Spec-First)
+# ABC Software Corp — SUNAT Electronic Invoicing (Spec-First)
 
-**primera fase (Spec-First)**: especificaciones técnicas definidas antes de
-escribir lógica de negocio. No contiene código de implementación.
-**País de referencia: Perú** — UBL 2.1 con la personalización de SUNAT.
+**First phase (Spec-First)**: technical specifications defined before writing any business logic.
+It contains no implementation code.
+**Reference country: Peru** — UBL 2.1 with the SUNAT customization.
 
-## 1. Resumen de lo realizado
+> Language: everything is in English following common practice. Official Peruvian tax terms (RUC,
+> IGV, ISC, ICBPER, CDR) and literal SUNAT values (`FormaPago`, `Contado`, `Credito`) keep their
+> original form; catalogs carry the official Spanish name next to the English description; legacy
+> column names and example business data stay as they are in the source. See the glossary in
+> [00-context](docs/00-context.md).
 
-| Fase | Resultado |
+## 1. Summary of the work
+
+| Phase | Result |
 |---|---|
-| **Entender** | Análisis del caso: el legado es un control de almacén (`fecha, ingreso, salida, producto, nro_documento`) sin validación de RUC, cálculo de tributos, XML UBL ni conexión con SUNAT/OSE. Base normativa: RS 097-2012, RS 234-2006, catálogos SUNAT (énfasis en el **catálogo 08 — ISC**) y UBL 2.1 con personalización SUNAT. |
-| **Planificar** | 12 specs funcionales derivadas de cada vacío del enunciado, 3 decisiones de arquitectura (ADR) y estructura `docs/` + `specs/`. |
-| **Actuar** | 4 entregables del examen + casos de uso (contrastados con Nubefact), migración del legado, 12 JSON Schemas, 11 catálogos, contrato OpenAPI y factura XML UBL SUNAT de ejemplo. |
-| **Validar** | Script automático con 451 verificaciones, lint de OpenAPI, renderizado de los 10 diagramas y validación de los XML en dos capas: estructura (XSD oficial UBL 2.1) y contenido SUNAT (catálogos, RUC, aritmética y cruce con el JSON). Corrigió 2 errores de cálculo en el ejemplo de factura. |
+| **Understand** | Case analysis: the legacy system is a warehouse control (`fecha, ingreso, salida, producto, nro_documento`) without RUC validation, tax calculation, UBL XML or SUNAT/OSE connection. Regulatory basis: RS 097-2012, RS 234-2006, RS 000193-2020 (payment terms), SUNAT catalogs (with emphasis on **catalog 08 — ISC**) and UBL 2.1 with the SUNAT customization. |
+| **Plan** | 12 functional specs derived from each gap in the exam statement, 3 architecture decisions (ADR) and a `docs/` + `specs/` structure. |
+| **Act** | The 4 exam deliverables + use cases (checked against Nubefact), legacy migration, 12 JSON Schemas, 11 catalogs, OpenAPI contract and a sample SUNAT UBL XML invoice. |
+| **Validate** | Automatic script with 456 checks, OpenAPI lint, rendering of the 10 diagrams and two-layer XML validation: structure (official UBL 2.1 XSD) and SUNAT content (catalogs, RUC, arithmetic and cross-check with the JSON). It caught and fixed 2 calculation errors in the invoice example. |
 
-**Decisiones clave**
+**Key decisions**
 
-- **MVC por fuera, hexagonal por dentro:** el MVC vive solo en la capa de entrega; el modelo es un
-  núcleo de dominio con puertos, por lo que migrar a Hexagonal / microservicios es reorganizar, no reescribir.
-- **ISC (catálogo 08):** se calcula antes del IGV porque forma parte de su base; el ejemplo de
-  factura usa cerveza (monto fijo, 02) y gaseosa (al valor, 01).
-- **Legado:** se migra con hash por fila para trazabilidad; `nro_documento` nunca se convierte en correlativo SUNAT.
-- **Montos como string decimal** para evitar errores de redondeo de punto flotante.
-- **Stack recomendado:** Kotlin Multiplatform (MSI + APK) y Spring Boot; firma digital solo en servidor.
+- **MVC on the outside, hexagonal on the inside:** MVC lives only in the delivery layer; the model is
+  a domain core with ports, so migrating to Hexagonal / microservices means reorganizing, not rewriting.
+- **ISC (catalog 08):** calculated before the IGV because it is part of its base; the invoice example
+  uses beer (fixed amount, 02) and a soft drink (ad valorem, 01).
+- **Legacy:** migrated with a hash per row for traceability; `nro_documento` never becomes a SUNAT sequence number.
+- **Amounts as decimal strings** to avoid floating-point rounding errors.
+- **Recommended stack:** Kotlin Multiplatform (MSI + APK) and Spring Boot; digital signing on the server only.
 
-## 2. Entregables del examen
+## 2. Exam deliverables
 
-| Entregable | Dónde está |
+| Deliverable | Where |
 |---|---|
-| 1. Modelo de Dominio y Contratos (DTOs / Schemas) | [docs/02-modelo-dominio.md](docs/02-modelo-dominio.md) · [specs/schemas/](specs/schemas/) · [specs/catalogos/](specs/catalogos/) |
-| 2. Diagramas de Arquitectura MVC con visión a Hexagonal | [docs/03-arquitectura.md](docs/03-arquitectura.md) · [docs/adr/](docs/adr/) |
-| 3. Especificación de Endpoints / Servicios | [docs/04-contratos-api.md](docs/04-contratos-api.md) · [specs/api/openapi.yaml](specs/api/openapi.yaml) |
-| 4. Matriz de Trazabilidad Normativa SUNAT ↔ UBL | [docs/05-matriz-trazabilidad.md](docs/05-matriz-trazabilidad.md) |
+| 1. Domain Model and Contracts (DTOs / Schemas) | [docs/02-domain-model.md](docs/02-domain-model.md) · [specs/schemas/](specs/schemas/) · [specs/catalogs/](specs/catalogs/) |
+| 2. MVC Architecture Diagrams with a Hexagonal outlook | [docs/03-architecture.md](docs/03-architecture.md) · [docs/adr/](docs/adr/) |
+| 3. Endpoint / Service Specification | [docs/04-api-contracts.md](docs/04-api-contracts.md) · [specs/api/openapi.yaml](specs/api/openapi.yaml) |
+| 4. Regulatory Traceability Matrix SUNAT ↔ UBL | [docs/05-traceability-matrix.md](docs/05-traceability-matrix.md) |
 
-Soporte: [contexto y normativa](docs/00-contexto.md) · [casos de uso](docs/01-casos-de-uso.md) ·
-[migración del legado](docs/06-migracion-legado.md) · [referencia UBL](specs/ref/README.md).
+Supporting material: [context and regulations](docs/00-context.md) · [use cases](docs/01-use-cases.md) ·
+[legacy migration](docs/06-legacy-migration.md) · [UBL reference](specs/ref/README.md).
 
-## 3. Specs funcionales
+## 3. Functional specs
 
 | ID | Spec |
 |---|---|
-| [SPEC-001](specs/features/001-emision-factura-boleta.md) | Emisión de Factura y Boleta |
-| [SPEC-002](specs/features/002-notas-credito-debito.md) | Notas de Crédito y Débito |
-| [SPEC-003](specs/features/003-calculo-tributos.md) | Cálculo de tributos (IGV, ISC cat. 08, ICBPER) |
-| [SPEC-004](specs/features/004-validacion-identidad.md) | Validación de RUC / DNI |
-| [SPEC-005](specs/features/005-series-correlativos.md) | Series y correlativos |
-| [SPEC-006](specs/features/006-xml-ubl-firma.md) | XML UBL 2.1 y firma digital |
-| [SPEC-007](specs/features/007-envio-ose-sunat.md) | Envío a OSE / SUNAT y CDR |
-| [SPEC-008](specs/features/008-resumen-diario-baja.md) | Resumen diario y comunicación de baja |
-| [SPEC-009](specs/features/009-migracion-legado.md) | Migración de datos legados |
-| [SPEC-010](specs/features/010-inventario.md) | Inventario integrado a ventas |
-| [SPEC-011](specs/features/011-catalogos-sunat.md) | Catálogos SUNAT |
-| [SPEC-012](specs/features/012-distribucion-multiplataforma.md) | Distribución MSI / APK |
+| [SPEC-001](specs/features/001-invoice-receipt-issuance.md) | Invoice and sales receipt issuance |
+| [SPEC-002](specs/features/002-credit-debit-notes.md) | Credit and debit notes |
+| [SPEC-003](specs/features/003-tax-calculation.md) | Tax calculation (IGV, ISC cat. 08, ICBPER) |
+| [SPEC-004](specs/features/004-identity-validation.md) | RUC / DNI validation |
+| [SPEC-005](specs/features/005-series-numbering.md) | Series and sequence numbers |
+| [SPEC-006](specs/features/006-ubl-xml-signature.md) | UBL 2.1 XML and digital signature |
+| [SPEC-007](specs/features/007-ose-sunat-submission.md) | Submission to the OSE / SUNAT and CDR |
+| [SPEC-008](specs/features/008-daily-summary-voiding.md) | Daily summary and voiding communication |
+| [SPEC-009](specs/features/009-legacy-migration.md) | Legacy data migration |
+| [SPEC-010](specs/features/010-inventory.md) | Inventory integrated with sales |
+| [SPEC-011](specs/features/011-sunat-catalogs.md) | SUNAT catalogs |
+| [SPEC-012](specs/features/012-multiplatform-distribution.md) | MSI / APK distribution |
 
-ADR: [001 Stack](docs/adr/001-stack-multiplataforma.md) ·
-[002 Monolito MVC con puertos](docs/adr/002-monolito-mvc-con-puertos.md) ·
-[003 Firma en servidor](docs/adr/003-firma-y-envio-en-servidor.md).
+ADR: [001 Stack](docs/adr/001-multiplatform-stack.md) ·
+[002 MVC monolith with ports](docs/adr/002-mvc-monolith-with-ports.md) ·
+[003 Server-side signing](docs/adr/003-server-side-signing.md).
 
-## 4. Validación
+## 4. Validation
 
 ```bash
 npm install
-npm run validate        # esquemas, ejemplos, aritmética SPEC-003, matriz, enlaces y lint OpenAPI
-npm run check:mermaid   # renderiza los diagramas (usa Chrome/Edge instalado o CHROME_PATH)
-npm run check:xsd       # capa ESTRUCTURA: XML contra el XSD oficial UBL 2.1 de OASIS (requiere JDK 11+)
-npm run check:sunat     # capa CONTENIDO: códigos SUNAT, RUC, aritmética y cruce XML ↔ JSON (incluido en validate)
+npm run validate        # schemas, examples, SPEC-003 arithmetic, matrix, links, SUNAT XML content and OpenAPI lint
+npm run check:mermaid   # renders the diagrams (uses an installed Chrome/Edge or CHROME_PATH)
+npm run check:xsd       # STRUCTURE layer: XML against the official OASIS UBL 2.1 XSD (requires JDK 11+)
+npm run check:sunat     # CONTENT layer: SUNAT codes, RUC, arithmetic and XML ↔ JSON cross-check (included in validate)
 ```
 
-UBL 2.1 de OASIS da la estructura y la personalización SUNAT define los valores para Perú; por eso
-los XML se validan contra ambas capas (detalle en [specs/ref/](specs/ref/README.md)).
+OASIS UBL 2.1 provides the structure and the SUNAT customization defines the values for Peru; that is
+why the XML files are validated against both layers (details in [specs/ref/](specs/ref/README.md)).
 
-## 5. Trabajo a futuro
+## 5. Future work
 
-A futuro se propone realizar lo siguiente:
+- Confirm against the current regulations the submission and voiding deadlines, the sales receipt threshold (S/ 700) and the ICBPER amount (S/ 0.50).
+- Replace the illustrative ISC rates in the example with the current rates.
+- Detail the daily summary and voiding communication (SPEC-008) and the full catalog of SUNAT errors.
 
-- Confirmar contra la norma vigente los plazos de envío y baja, el umbral de boletas (S/ 700) y el ICBPER (S/ 0.50).
-- Reemplazar las tasas ISC ilustrativas del ejemplo por las tasas vigentes.
-- Completar con una cuenta Nubefact registrada (requiere RUC) los 7 puntos parciales o no verificados de la sección 7 de los casos de uso.
-- Detallar el resumen diario y la comunicación de baja (SPEC-008) y el catálogo completo de errores SUNAT.
+## 6. Pending (optional)
+
+- **Nubefact DEMO account:** screen-by-screen walkthrough of the use cases. It requires a RUC, which is
+  not available; the instructor stated it is optional. All 16 verification points were already
+  confirmed with Nubefact's public documentation (section 7 of [use cases](docs/01-use-cases.md)).

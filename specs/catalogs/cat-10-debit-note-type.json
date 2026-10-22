@@ -1,0 +1,13 @@
+{
+  "number": "10",
+  "name": "Electronic debit note type code",
+  "listAgencyName": "PE:SUNAT",
+  "listURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo10",
+  "codes": [
+    { "code": "01", "description": "Late-payment interest", "officialName": "Intereses por mora" },
+    { "code": "02", "description": "Value increase", "officialName": "Aumento en el valor" },
+    { "code": "03", "description": "Penalties / other concepts", "officialName": "Penalidades / otros conceptos" },
+    { "code": "11", "description": "Export operation adjustments", "officialName": "Ajustes de operaciones de exportación" },
+    { "code": "12", "description": "IVAP adjustments", "officialName": "Ajustes afectos al IVAP" }
+  ]
+}

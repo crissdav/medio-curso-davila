@@ -1,0 +1,11 @@
+{
+  "number": "51",
+  "name": "Operation type code (subset)",
+  "listAgencyName": "PE:SUNAT",
+  "listURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo51",
+  "codes": [
+    { "code": "0101", "description": "Domestic sale", "officialName": "Venta interna" },
+    { "code": "0200", "description": "Export of goods", "officialName": "Exportación de bienes", "phase": 2 },
+    { "code": "1001", "description": "Operation subject to SPOT withholding (detracción)", "officialName": "Operación sujeta a detracción", "phase": 2 }
+  ]
+}

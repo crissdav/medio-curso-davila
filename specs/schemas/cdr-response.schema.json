@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abc-software.pe/specs/schemas/cdr-response.schema.json",
+  "title": "CdrResponseDTO",
+  "description": "Receipt confirmation (CDR, Constancia de Recepción) returned by SUNAT or the OSE (UBL ApplicationResponse). SPEC-007.",
+  "type": "object",
+  "required": ["responseCode", "description", "result"],
+  "properties": {
+    "result": {
+      "type": "string",
+      "enum": ["ACCEPTED", "OBSERVED", "REJECTED", "EXCEPTION"],
+      "description": "Derived from responseCode: 0 accepted; 0100-1999 exception (retryable); 2000-3999 rejected; accepted with observations ≥ 4000."
+    },
+    "responseCode": { "type": "string", "pattern": "^[0-9]{1,4}$", "description": "cac:DocumentResponse/cac:Response/cbc:ResponseCode" },
+    "description": { "type": "string", "description": "cac:DocumentResponse/cac:Response/cbc:Description" },
+    "notes": { "type": "array", "items": { "type": "string" }, "description": "CDR cbc:Note (codes ≥ 4000)." },
+    "receivedAt": { "type": "string", "format": "date-time" },
+    "ticket": { "type": "string", "description": "Asynchronous submissions only (daily summary / voided documents)." },
+    "channel": { "type": "string", "enum": ["SUNAT", "OSE"] }
+  },
+  "additionalProperties": false
+}

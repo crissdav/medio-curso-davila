@@ -1,0 +1,12 @@
+{
+  "number": "08",
+  "name": "ISC calculation system code",
+  "listAgencyName": "PE:SUNAT",
+  "listURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo08",
+  "ublXPath": "cac:InvoiceLine/cac:TaxTotal/cac:TaxSubtotal[cac:TaxCategory/cac:TaxScheme/cbc:ID='2000']/cac:TaxCategory/cbc:TierRange",
+  "codes": [
+    { "code": "01", "description": "Ad valorem system", "officialName": "Sistema al valor (Apéndice IV, lit. A – T.U.O IGV e ISC)", "formula": "ISC = lineSaleValue × iscRate", "groceryExample": "Soft drinks and sugary beverages (rate depends on sugar content)" },
+    { "code": "02", "description": "Fixed amount system", "officialName": "Aplicación del Monto Fijo (Apéndice IV, lit. B – T.U.O IGV e ISC)", "formula": "ISC = quantity × fixedAmountPerUnit", "groceryExample": "Beer (per litre), cigarettes (per unit)" },
+    { "code": "03", "description": "Retail price system", "officialName": "Sistema de Precios de Venta al Público (Apéndice IV, lit. C – T.U.O IGV e ISC)", "formula": "ISC = quantity × (retailPrice / (1 + igvRate)) × iscRate", "groceryExample": "Products with a manufacturer-suggested retail price" }
+  ]
+}

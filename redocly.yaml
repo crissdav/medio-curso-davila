@@ -1,5 +1,5 @@
 extends:
   - recommended
 rules:
-  # API interna de ABC: no se publica bajo ninguna licencia.
+  # Internal ABC API: not published under any license.
   info-license: off

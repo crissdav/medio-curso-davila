@@ -1,0 +1,62 @@
+{
+  "documentType": "01",
+  "series": "F001",
+  "operationType": "0101",
+  "issueDate": "2026-10-22",
+  "issueTime": "10:15:00",
+  "currency": "PEN",
+  "customer": {
+    "documentType": "6",
+    "documentNumber": "20601234565",
+    "legalName": "BODEGA LA ESQUINA S.A.C.",
+    "address": "Av. Raymondi 123, Tingo María",
+    "ubigeo": "100601",
+    "email": "compras@bodegalaesquina.pe"
+  },
+  "items": [
+    {
+      "productCode": "ARR-5KG",
+      "description": "Arroz extra bolsa 5 kg",
+      "quantity": "10",
+      "unitOfMeasure": "NIU",
+      "unitValue": "20.00",
+      "igvAffectation": "10"
+    },
+    {
+      "productCode": "CER-620",
+      "description": "Cerveza botella 620 ml",
+      "quantity": "12",
+      "unitOfMeasure": "NIU",
+      "unitValue": "4.00",
+      "igvAffectation": "10",
+      "isc": {
+        "system": "02",
+        "fixedAmount": "1.25"
+      }
+    },
+    {
+      "productCode": "GAS-3L",
+      "description": "Gaseosa 3 L",
+      "quantity": "6",
+      "unitOfMeasure": "NIU",
+      "unitValue": "8.00",
+      "igvAffectation": "10",
+      "isc": {
+        "system": "01",
+        "rate": "0.17"
+      }
+    },
+    {
+      "productCode": "BOLSA",
+      "description": "Bolsa plástica",
+      "quantity": "2",
+      "unitOfMeasure": "NIU",
+      "unitValue": "0.0847",
+      "igvAffectation": "10",
+      "icbperBagCount": 2
+    }
+  ],
+  "paymentTerms": {
+    "type": "Contado"
+  }
+}

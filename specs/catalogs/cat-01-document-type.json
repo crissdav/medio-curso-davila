@@ -1,0 +1,15 @@
+{
+  "number": "01",
+  "name": "Document type code",
+  "listAgencyName": "PE:SUNAT",
+  "listURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01",
+  "codes": [
+    { "code": "01", "description": "Invoice", "officialName": "Factura", "seriesPrefix": "F", "ublRoot": "Invoice" },
+    { "code": "03", "description": "Sales receipt", "officialName": "Boleta de venta", "seriesPrefix": "B", "ublRoot": "Invoice" },
+    { "code": "07", "description": "Credit note", "officialName": "Nota de crédito", "seriesPrefix": "F|B", "ublRoot": "CreditNote" },
+    { "code": "08", "description": "Debit note", "officialName": "Nota de débito", "seriesPrefix": "F|B", "ublRoot": "DebitNote" },
+    { "code": "09", "description": "Dispatch guide (sender)", "officialName": "Guía de remisión remitente", "seriesPrefix": "T", "ublRoot": "DespatchAdvice", "phase": 2 },
+    { "code": "20", "description": "Withholding receipt", "officialName": "Comprobante de retención", "seriesPrefix": "R", "phase": 2 },
+    { "code": "40", "description": "Perception receipt", "officialName": "Comprobante de percepción", "seriesPrefix": "P", "phase": 2 }
+  ]
+}

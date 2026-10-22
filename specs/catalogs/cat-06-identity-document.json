@@ -1,0 +1,15 @@
+{
+  "number": "06",
+  "name": "Identity document type code",
+  "listAgencyName": "PE:SUNAT",
+  "schemeURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06",
+  "codes": [
+    { "code": "0", "description": "Non-domiciled tax document without RUC", "officialName": "Doc. trib. no domiciliado sin RUC", "pattern": "^.{1,15}$" },
+    { "code": "1", "description": "National ID (DNI)", "officialName": "DNI", "pattern": "^[0-9]{8}$" },
+    { "code": "4", "description": "Foreigner ID card", "officialName": "Carnet de extranjería", "pattern": "^[A-Za-z0-9]{1,12}$" },
+    { "code": "6", "description": "Taxpayer ID (RUC)", "officialName": "RUC", "pattern": "^(10|15|16|17|20)[0-9]{9}$", "validation": "modulus11" },
+    { "code": "7", "description": "Passport", "officialName": "Pasaporte", "pattern": "^[A-Za-z0-9]{1,12}$" },
+    { "code": "A", "description": "Diplomatic ID card", "officialName": "Cédula diplomática de identidad", "pattern": "^[A-Za-z0-9]{1,15}$" },
+    { "code": "-", "description": "Various — sales receipt below the threshold without customer identification", "officialName": "Varios — boleta menor al umbral sin identificar al cliente", "pattern": "^-?$" }
+  ]
+}

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Factura electrónica F001-00000123 de ABC (caso del examen) en UBL 2.1 con personalización SUNAT (Perú).
-  Corresponde a specs/schemas/examples/factura-response.json. Los comentarios T-nn remiten a la
-  matriz de trazabilidad (docs/05-matriz-trazabilidad.md). Tasas ISC ilustrativas. Sin firma real.
+  Electronic invoice F001-00000123 of ABC (exam case) in UBL 2.1 with the SUNAT customization (Peru).
+  Equivalent to specs/schemas/examples/invoice-response.json. The T-nn comments point to the
+  traceability matrix (docs/05-traceability-matrix.md). Illustrative ISC rates. Not actually signed.
 -->
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
          xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
          xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
          xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
          xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
-  <!-- T-03: aquí se inserta la firma XMLDSig (SPEC-006 R-05) -->
+  <!-- T-03: the XMLDSig signature is inserted here (SPEC-006 R-05) -->
   <ext:UBLExtensions>
     <ext:UBLExtension>
       <ext:ExtensionContent/>
@@ -20,7 +20,7 @@
   <cbc:ID>F001-123</cbc:ID>                                                  <!-- T-05 -->
   <cbc:IssueDate>2026-10-22</cbc:IssueDate>                                  <!-- T-06 -->
   <cbc:IssueTime>10:15:00</cbc:IssueTime>                                    <!-- T-07 -->
-  <!-- T-08 tipo de comprobante (catálogo 01) · T-09 tipo de operación (catálogo 51) -->
+  <!-- T-08 document type (catalog 01) · T-09 operation type (catalog 51) -->
   <cbc:InvoiceTypeCode listID="0101" listAgencyName="PE:SUNAT" listName="Tipo de Documento"
                        listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01">01</cbc:InvoiceTypeCode>
   <cbc:Note languageLocaleID="1000">TRESCIENTOS SETENTA Y SIETE CON 81/100 SOLES</cbc:Note> <!-- T-10 -->
@@ -108,7 +108,7 @@
     <cbc:PayableAmount currencyID="PEN">377.81</cbc:PayableAmount>             <!-- T-34 -->
   </cac:LegalMonetaryTotal>
 
-  <!-- Línea 1: arroz, gravado (afectación 10) -->
+  <!-- Line 1: rice, taxed (affectation 10) -->
   <cac:InvoiceLine>
     <cbc:ID>1</cbc:ID>                                                       <!-- T-40 -->
     <cbc:InvoicedQuantity unitCode="NIU" unitCodeListID="UN/ECE rec 20">10</cbc:InvoicedQuantity> <!-- T-41 -->
@@ -143,7 +143,7 @@
     <cac:Price><cbc:PriceAmount currencyID="PEN">20.00</cbc:PriceAmount></cac:Price> <!-- T-45 -->
   </cac:InvoiceLine>
 
-  <!-- Línea 2: cerveza, ISC sistema 02 monto fijo (catálogo 08) -->
+  <!-- Line 2: beer, ISC system 02 fixed amount (catalog 08) -->
   <cac:InvoiceLine>
     <cbc:ID>2</cbc:ID>
     <cbc:InvoicedQuantity unitCode="NIU" unitCodeListID="UN/ECE rec 20">12</cbc:InvoicedQuantity>
@@ -165,7 +165,7 @@
           <cac:TaxScheme><cbc:ID>2000</cbc:ID><cbc:Name>ISC</cbc:Name><cbc:TaxTypeCode>EXC</cbc:TaxTypeCode></cac:TaxScheme>
         </cac:TaxCategory>
       </cac:TaxSubtotal>
-      <cac:TaxSubtotal>                                                      <!-- IGV sobre valor venta + ISC -->
+      <cac:TaxSubtotal>                                                      <!-- IGV on sale value + ISC -->
         <cbc:TaxableAmount currencyID="PEN">63.00</cbc:TaxableAmount>
         <cbc:TaxAmount currencyID="PEN">11.34</cbc:TaxAmount>
         <cac:TaxCategory>
@@ -183,7 +183,7 @@
     <cac:Price><cbc:PriceAmount currencyID="PEN">4.00</cbc:PriceAmount></cac:Price>
   </cac:InvoiceLine>
 
-  <!-- Línea 3: gaseosa, ISC sistema 01 al valor (catálogo 08) -->
+  <!-- Line 3: soft drink, ISC system 01 ad valorem (catalog 08) -->
   <cac:InvoiceLine>
     <cbc:ID>3</cbc:ID>
     <cbc:InvoicedQuantity unitCode="NIU" unitCodeListID="UN/ECE rec 20">6</cbc:InvoicedQuantity>
@@ -224,7 +224,7 @@
     <cac:Price><cbc:PriceAmount currencyID="PEN">8.00</cbc:PriceAmount></cac:Price>
   </cac:InvoiceLine>
 
-  <!-- Línea 4: bolsa plástica con ICBPER -->
+  <!-- Line 4: plastic bag with ICBPER -->
   <cac:InvoiceLine>
     <cbc:ID>4</cbc:ID>
     <cbc:InvoicedQuantity unitCode="NIU" unitCodeListID="UN/ECE rec 20">2</cbc:InvoicedQuantity>

@@ -1,0 +1,140 @@
+{
+  "id": "3f6c1a52-8d0b-4b8e-9a4e-0c1d2e3f4a5b",
+  "documentType": "01",
+  "series": "F001",
+  "sequenceNumber": 123,
+  "number": "F001-00000123",
+  "operationType": "0101",
+  "issueDate": "2026-10-22",
+  "issueTime": "10:15:00",
+  "currency": "PEN",
+  "issuer": {
+    "ruc": "20123456786",
+    "legalName": "ABC SOFTWARE CORP S.A.C.",
+    "tradeName": "ABC ABARROTES",
+    "establishment": "0000"
+  },
+  "customer": {
+    "documentType": "6",
+    "documentNumber": "20601234565",
+    "legalName": "BODEGA LA ESQUINA S.A.C.",
+    "address": "Av. Raymondi 123, Tingo María",
+    "ubigeo": "100601",
+    "email": "compras@bodegalaesquina.pe"
+  },
+  "items": [
+    {
+      "lineNumber": 1,
+      "productCode": "ARR-5KG",
+      "description": "Arroz extra bolsa 5 kg",
+      "quantity": "10",
+      "unitOfMeasure": "NIU",
+      "unitValue": "20.00",
+      "igvAffectation": "10",
+      "unitPrice": "23.60",
+      "saleValue": "200.00",
+      "iscBase": "0.00",
+      "iscAmount": "0.00",
+      "igvBase": "200.00",
+      "igvRate": "0.18",
+      "igv": "36.00",
+      "icbper": "0.00",
+      "totalTaxes": "36.00"
+    },
+    {
+      "lineNumber": 2,
+      "productCode": "CER-620",
+      "description": "Cerveza botella 620 ml",
+      "quantity": "12",
+      "unitOfMeasure": "NIU",
+      "unitValue": "4.00",
+      "igvAffectation": "10",
+      "isc": {
+        "system": "02",
+        "fixedAmount": "1.25"
+      },
+      "iscAmount": "15.00",
+      "unitPrice": "6.195",
+      "saleValue": "48.00",
+      "iscBase": "48.00",
+      "igvBase": "63.00",
+      "igvRate": "0.18",
+      "igv": "11.34",
+      "icbper": "0.00",
+      "totalTaxes": "26.34"
+    },
+    {
+      "lineNumber": 3,
+      "productCode": "GAS-3L",
+      "description": "Gaseosa 3 L",
+      "quantity": "6",
+      "unitOfMeasure": "NIU",
+      "unitValue": "8.00",
+      "igvAffectation": "10",
+      "isc": {
+        "system": "01",
+        "rate": "0.17"
+      },
+      "iscAmount": "8.16",
+      "unitPrice": "11.045",
+      "saleValue": "48.00",
+      "iscBase": "48.00",
+      "igvBase": "56.16",
+      "igvRate": "0.18",
+      "igv": "10.11",
+      "icbper": "0.00",
+      "totalTaxes": "18.27"
+    },
+    {
+      "lineNumber": 4,
+      "productCode": "BOLSA",
+      "description": "Bolsa plástica",
+      "quantity": "2",
+      "unitOfMeasure": "NIU",
+      "unitValue": "0.0847",
+      "igvAffectation": "10",
+      "icbperBagCount": 2,
+      "unitPrice": "0.10",
+      "saleValue": "0.17",
+      "iscBase": "0.00",
+      "iscAmount": "0.00",
+      "igvBase": "0.17",
+      "igvRate": "0.18",
+      "igv": "0.03",
+      "icbper": "1.00",
+      "totalTaxes": "1.03"
+    }
+  ],
+  "paymentTerms": {
+    "type": "Contado"
+  },
+  "totals": {
+    "taxedTotal": "296.17",
+    "exemptTotal": "0.00",
+    "unaffectedTotal": "0.00",
+    "freeTotal": "0.00",
+    "iscTotal": "23.16",
+    "igvTotal": "57.48",
+    "icbperTotal": "1.00",
+    "taxTotal": "81.64",
+    "saleValueTotal": "296.17",
+    "salePriceTotal": "377.81",
+    "discountTotal": "0.00",
+    "payableAmount": "377.81",
+    "amountInWords": "TRESCIENTOS SETENTA Y SIETE CON 81/100 SOLES"
+  },
+  "status": "ACCEPTED",
+  "documentHash": "qXk3m1V8Yb2Zc9Lw0eR4tU7iO6p=",
+  "cdr": {
+    "result": "ACCEPTED",
+    "responseCode": "0",
+    "description": "La Factura numero F001-00000123, ha sido aceptada",
+    "receivedAt": "2026-10-22T10:15:04-05:00",
+    "channel": "OSE"
+  },
+  "links": {
+    "xml": "/api/v1/invoices/3f6c1a52-8d0b-4b8e-9a4e-0c1d2e3f4a5b/xml",
+    "cdr": "/api/v1/invoices/3f6c1a52-8d0b-4b8e-9a4e-0c1d2e3f4a5b/cdr",
+    "pdf": "/api/v1/invoices/3f6c1a52-8d0b-4b8e-9a4e-0c1d2e3f4a5b/pdf"
+  }
+}

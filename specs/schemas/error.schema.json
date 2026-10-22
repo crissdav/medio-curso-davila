@@ -2,28 +2,28 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://abc-software.pe/specs/schemas/error.schema.json",
   "title": "ErrorDTO (RFC 9457 problem+json)",
-  "description": "Formato único de error para toda la API.",
+  "description": "Single error format for the whole API.",
   "type": "object",
-  "required": ["type", "title", "status", "codigo"],
+  "required": ["type", "title", "status", "code"],
   "properties": {
     "type": { "type": "string", "format": "uri-reference" },
     "title": { "type": "string" },
     "status": { "type": "integer", "minimum": 400, "maximum": 599 },
     "detail": { "type": "string" },
-    "codigo": {
+    "code": {
       "type": "string",
-      "description": "Código de negocio interno (p.ej. RUC_INVALIDO, TOTALES_DESCUADRADOS, SERIE_NO_AUTORIZADA) o código SUNAT con prefijo SUNAT- (p.ej. SUNAT-2800).",
+      "description": "Internal business code (e.g. INVALID_RUC, TOTALS_MISMATCH, SERIES_NOT_AUTHORIZED) or SUNAT code with the SUNAT- prefix (e.g. SUNAT-2800).",
       "pattern": "^([A-Z_]+|SUNAT-[0-9]{4})$"
     },
-    "errores": {
+    "errors": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["campo", "mensaje"],
+        "required": ["field", "message"],
         "properties": {
-          "campo": { "type": "string", "description": "JSON Pointer del campo, p.ej. /items/0/cantidad" },
-          "mensaje": { "type": "string" },
-          "regla": { "type": "string", "description": "ID de la regla de la spec, p.ej. SPEC-003/R-04" }
+          "field": { "type": "string", "description": "JSON Pointer of the field, e.g. /items/0/quantity" },
+          "message": { "type": "string" },
+          "rule": { "type": "string", "description": "Spec rule ID, e.g. SPEC-003/R-04" }
         }
       }
     }

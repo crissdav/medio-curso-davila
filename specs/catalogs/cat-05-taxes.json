@@ -1,0 +1,17 @@
+{
+  "number": "05",
+  "name": "Tax type code",
+  "listAgencyName": "PE:SUNAT",
+  "schemeURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo05",
+  "codes": [
+    { "code": "1000", "description": "General Sales Tax (IGV)", "officialName": "IGV Impuesto General a las Ventas", "name": "IGV", "internationalCode": "VAT", "category": "S" },
+    { "code": "1016", "description": "Milled Rice Sales Tax (IVAP)", "officialName": "Impuesto a la Venta Arroz Pilado", "name": "IVAP", "internationalCode": "VAT", "category": "S" },
+    { "code": "2000", "description": "Selective Consumption Tax (ISC)", "officialName": "ISC Impuesto Selectivo al Consumo", "name": "ISC", "internationalCode": "EXC", "category": "S" },
+    { "code": "7152", "description": "Plastic Bag Consumption Tax (ICBPER)", "officialName": "Impuesto al Consumo de las Bolsas de Plástico", "name": "ICBPER", "internationalCode": "OTH", "category": null },
+    { "code": "9995", "description": "Export", "officialName": "Exportación", "name": "EXP", "internationalCode": "FRE", "category": "G" },
+    { "code": "9996", "description": "Free of charge", "officialName": "Gratuito", "name": "GRA", "internationalCode": "FRE", "category": "Z" },
+    { "code": "9997", "description": "Exempt", "officialName": "Exonerado", "name": "EXO", "internationalCode": "VAT", "category": "E" },
+    { "code": "9998", "description": "Unaffected", "officialName": "Inafecto", "name": "INA", "internationalCode": "FRE", "category": "O" },
+    { "code": "9999", "description": "Other taxes", "officialName": "Otros tributos", "name": "OTROS", "internationalCode": "OTH", "category": "S" }
+  ]
+}

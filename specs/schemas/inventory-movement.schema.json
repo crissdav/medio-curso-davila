@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abc-software.pe/specs/schemas/inventory-movement.schema.json",
+  "title": "InventoryMovementDTO",
+  "description": "Warehouse movement in the new system. Target of the migration (SPEC-009) and generated automatically when documents are issued (SPEC-010).",
+  "type": "object",
+  "required": ["id", "date", "type", "productCode", "quantity", "documentReference", "origin"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "date": { "$ref": "common.schema.json#/$defs/Date" },
+    "type": { "type": "string", "enum": ["INBOUND", "OUTBOUND", "ADJUSTMENT"] },
+    "productCode": { "type": "string", "pattern": "^[A-Z0-9-]{1,30}$" },
+    "quantity": { "$ref": "common.schema.json#/$defs/Quantity" },
+    "documentReference": {
+      "type": "object",
+      "required": ["type", "number"],
+      "properties": {
+        "type": { "type": "string", "enum": ["LEGACY_INTERNAL", "INVOICE", "DISPATCH_GUIDE", "ADJUSTMENT"] },
+        "number": { "type": "string", "maxLength": 30 },
+        "invoiceId": { "type": "string", "format": "uuid" }
+      },
+      "additionalProperties": false
+    },
+    "origin": { "$ref": "common.schema.json#/$defs/DataOrigin" }
+  },
+  "additionalProperties": false
+}

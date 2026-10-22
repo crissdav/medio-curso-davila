@@ -1,0 +1,18 @@
+{
+  "number": "03",
+  "name": "Unit of measure code (UN/ECE Rec 20) — subset used in groceries",
+  "listAgencyName": "United Nations Economic Commission for Europe",
+  "listID": "UN/ECE rec 20",
+  "codes": [
+    { "code": "NIU", "description": "Unit (goods)", "officialName": "Unidad (bienes)" },
+    { "code": "ZZ", "description": "Unit (services)", "officialName": "Unidad (servicios)" },
+    { "code": "KGM", "description": "Kilogram", "officialName": "Kilogramo" },
+    { "code": "GRM", "description": "Gram", "officialName": "Gramo" },
+    { "code": "LTR", "description": "Litre", "officialName": "Litro" },
+    { "code": "MLT", "description": "Millilitre", "officialName": "Mililitro" },
+    { "code": "BX", "description": "Box", "officialName": "Caja" },
+    { "code": "BG", "description": "Bag", "officialName": "Bolsa" },
+    { "code": "PK", "description": "Pack", "officialName": "Paquete" },
+    { "code": "DZN", "description": "Dozen", "officialName": "Docena" }
+  ]
+}

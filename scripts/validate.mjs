@@ -1,9 +1,9 @@
-// Validación del entregable Spec-First:
-//  1. JSON Schemas compilan y los ejemplos los cumplen.
-//  2. Los catálogos cumplen su esquema y coinciden con los enums de common.schema.json.
-//  3. El ejemplo de factura cuadra con las reglas de cálculo de SPEC-003.
-//  4. La matriz de trazabilidad solo usa rutas DTO y códigos de catálogo existentes.
-//  5. Las reglas citadas (SPEC-nnn R-nn / M-nn) existen y los enlaces relativos resuelven.
+// Validation of the Spec-First deliverable:
+//  1. JSON Schemas compile and the examples comply with them.
+//  2. Catalogs comply with their schema and match the enums of common.schema.json.
+//  3. The invoice example matches the SPEC-003 calculation rules.
+//  4. The traceability matrix only uses existing DTO paths and catalog codes.
+//  5. Cited rules (SPEC-nnn R-nn / M-nn) exist and relative links resolve.
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,7 +19,7 @@ const warnings = [];
 let checks = 0;
 const ok = (cond, msg) => { checks++; if (!cond) errors.push(msg); };
 
-// ---------- 1. Schemas y ejemplos ----------
+// ---------- 1. Schemas and examples ----------
 const ajv = new Ajv2020({ allErrors: true, strict: true, strictRequired: false, strictTypes: false });
 addFormats(ajv);
 const schemaDir = p('specs', 'schemas');
@@ -30,118 +30,118 @@ for (const f of readdirSync(schemaDir).filter((f) => f.endsWith('.schema.json'))
 }
 const base = 'https://abc-software.pe/specs/schemas/';
 for (const f of Object.keys(schemas)) {
-  try { ajv.getSchema(base + f); checks++; } catch (e) { errors.push(`Schema ${f} no compila: ${e.message}`); }
+  try { ajv.getSchema(base + f); checks++; } catch (e) { errors.push(`Schema ${f} does not compile: ${e.message}`); }
 }
 
 const examples = [
-  ['factura-request.json', 'comprobante.schema.json#/$defs/EmitirComprobanteRequest'],
-  ['factura-response.json', 'comprobante.schema.json#/$defs/Comprobante'],
-  ['nota-credito-request.json', 'nota.schema.json'],
-  ['legacy-movimiento.json', 'legacy-movimiento.schema.json'],
-  ['movimiento-inventario.json', 'movimiento-inventario.schema.json'],
+  ['invoice-request.json', 'invoice.schema.json#/$defs/IssueInvoiceRequest'],
+  ['invoice-response.json', 'invoice.schema.json#/$defs/Invoice'],
+  ['credit-note-request.json', 'note.schema.json'],
+  ['legacy-movement.json', 'legacy-movement.schema.json'],
+  ['inventory-movement.json', 'inventory-movement.schema.json'],
 ];
 for (const [file, ref] of examples) {
   const validate = ajv.getSchema(base + ref);
   const valid = validate(readJson(join(schemaDir, 'examples', file)));
-  ok(valid, `Ejemplo ${file} no cumple ${ref}: ${ajv.errorsText(validate.errors)}`);
+  ok(valid, `Example ${file} does not comply with ${ref}: ${ajv.errorsText(validate.errors)}`);
 }
 
-// Casos negativos: el esquema DEBE rechazarlos.
-const req = readJson(join(schemaDir, 'examples', 'factura-request.json'));
-const emitir = ajv.getSchema(base + 'comprobante.schema.json#/$defs/EmitirComprobanteRequest');
-const negativos = [
-  ['factura con cliente DNI', { ...req, cliente: { tipoDocumento: '1', numeroDocumento: '12345678', razonSocial: 'X' } }],
-  ['factura con serie B', { ...req, serie: 'B001' }],
-  ['USD sin tipo de cambio', { ...req, moneda: 'USD' }],
-  ['crédito sin cuotas', { ...req, formaPago: { tipo: 'Credito' } }],
-  ['ISC sistema 02 sin monto fijo', { ...req, items: [{ ...req.items[1], isc: { sistema: '02' } }] }],
-  ['afectación inexistente 99', { ...req, items: [{ ...req.items[0], afectacionIgv: '99' }] }],
-  ['monto como number', { ...req, items: [{ ...req.items[0], valorUnitario: 20 }] }],
+// Negative cases: the schema MUST reject them.
+const req = readJson(join(schemaDir, 'examples', 'invoice-request.json'));
+const issue = ajv.getSchema(base + 'invoice.schema.json#/$defs/IssueInvoiceRequest');
+const negatives = [
+  ['invoice with a DNI customer', { ...req, customer: { documentType: '1', documentNumber: '12345678', legalName: 'X' } }],
+  ['invoice with a B series', { ...req, series: 'B001' }],
+  ['USD without exchange rate', { ...req, currency: 'USD' }],
+  ['credit without installments', { ...req, paymentTerms: { type: 'Credito' } }],
+  ['ISC system 02 without fixed amount', { ...req, items: [{ ...req.items[1], isc: { system: '02' } }] }],
+  ['non-existent affectation 99', { ...req, items: [{ ...req.items[0], igvAffectation: '99' }] }],
+  ['amount as a number', { ...req, items: [{ ...req.items[0], unitValue: 20 }] }],
 ];
-for (const [nombre, dato] of negativos) ok(!emitir(dato), `El esquema debió rechazar: ${nombre}`);
-const notaSchema = ajv.getSchema(base + 'nota.schema.json');
-const nc = readJson(join(schemaDir, 'examples', 'nota-credito-request.json'));
-ok(!notaSchema({ ...nc, tipoComprobante: '08', tipoNota: '05' }), 'El esquema debió rechazar ND con tipoNota 05 (no existe en catálogo 10)');
+for (const [name, data] of negatives) ok(!issue(data), `The schema should have rejected: ${name}`);
+const noteSchema = ajv.getSchema(base + 'note.schema.json');
+const cn = readJson(join(schemaDir, 'examples', 'credit-note-request.json'));
+ok(!noteSchema({ ...cn, documentType: '08', noteType: '05' }), 'The schema should have rejected a debit note with noteType 05 (not in catalog 10)');
 
-// ---------- 2. Catálogos ----------
-const catDir = p('specs', 'catalogos');
-const catalogos = {};
-const catValidate = ajv.getSchema(base + 'catalogo.schema.json');
+// ---------- 2. Catalogs ----------
+const catDir = p('specs', 'catalogs');
+const catalogs = {};
+const catValidate = ajv.getSchema(base + 'catalog.schema.json');
 for (const f of readdirSync(catDir).filter((f) => f.endsWith('.json'))) {
   const c = readJson(join(catDir, f));
-  ok(catValidate(c), `Catálogo ${f} inválido: ${ajv.errorsText(catValidate.errors)}`);
-  catalogos[c.numero] = new Set(c.codigos.map((x) => x.codigo));
+  ok(catValidate(c), `Catalog ${f} is invalid: ${ajv.errorsText(catValidate.errors)}`);
+  catalogs[c.number] = new Set(c.codes.map((x) => x.code));
 }
 const defs = schemas['common.schema.json'].$defs;
 const sameSet = (enumArr, set) => enumArr.length === set.size && enumArr.every((x) => set.has(x));
-for (const [def, cat] of [['AfectacionIgv', '07'], ['SistemaIsc', '08'], ['TipoDocumentoIdentidad', '06'], ['Moneda', '02'], ['UnidadMedida', '03'], ['TipoOperacion', '51']]) {
-  ok(sameSet(defs[def].enum, catalogos[cat]), `Enum ${def} no coincide con catálogo ${cat}`);
+for (const [def, cat] of [['IgvAffectation', '07'], ['IscSystem', '08'], ['IdentityDocumentType', '06'], ['Currency', '02'], ['UnitOfMeasure', '03'], ['OperationType', '51']]) {
+  ok(sameSet(defs[def].enum, catalogs[cat]), `Enum ${def} does not match catalog ${cat}`);
 }
-const notaThen = schemas['nota.schema.json'].allOf.map((a) => a.then.properties.tipoNota.enum);
-ok(sameSet(notaThen[0], catalogos['09']), 'Enum tipoNota (07) no coincide con catálogo 09');
-ok(sameSet(notaThen[1], catalogos['10']), 'Enum tipoNota (08) no coincide con catálogo 10');
-const afectacion = readJson(join(catDir, 'cat-07-afectacion-igv.json'));
-for (const c of afectacion.codigos) ok(catalogos['05'].has(c.tributo), `Catálogo 07 código ${c.codigo} apunta a tributo inexistente ${c.tributo}`);
+const noteEnums = schemas['note.schema.json'].allOf.map((a) => a.then.properties.noteType.enum);
+ok(sameSet(noteEnums[0], catalogs['09']), 'noteType enum (07) does not match catalog 09');
+ok(sameSet(noteEnums[1], catalogs['10']), 'noteType enum (08) does not match catalog 10');
+const affectation = readJson(join(catDir, 'cat-07-igv-affectation.json'));
+for (const c of affectation.codes) ok(catalogs['05'].has(c.tax), `Catalog 07 code ${c.code} points to a non-existent tax ${c.tax}`);
 
-// ---------- 3. Aritmética de SPEC-003 sobre el ejemplo ----------
-const TASA_IGV = 0.18, ICBPER = 0.5;
+// ---------- 3. SPEC-003 arithmetic on the example ----------
+const IGV_RATE = 0.18, ICBPER = 0.5;
 const r2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
 const f2 = (x) => r2(x).toFixed(2);
-const resp = readJson(join(schemaDir, 'examples', 'factura-response.json'));
-let sumValor = 0, sumIsc = 0, sumBaseIgv = 0, sumIgvLineas = 0, sumIcbper = 0, sumImpuestos = 0;
+const resp = readJson(join(schemaDir, 'examples', 'invoice-response.json'));
+let sumValue = 0, sumIsc = 0, sumIgvBase = 0, sumLineIgv = 0, sumIcbper = 0;
 for (const l of resp.items) {
-  const cant = Number(l.cantidad), vu = Number(l.valorUnitario);
-  const valorVenta = r2(cant * vu - Number(l.descuento ?? 0));
+  const qty = Number(l.quantity), uv = Number(l.unitValue);
+  const saleValue = r2(qty * uv - Number(l.discount ?? 0));
   let isc = 0;
-  if (l.isc?.sistema === '01') isc = r2(valorVenta * Number(l.isc.tasa));
-  if (l.isc?.sistema === '02') isc = r2(cant * Number(l.isc.montoFijo));
-  if (l.isc?.sistema === '03') isc = r2(cant * (Number(l.isc.precioVentaPublico) / (1 + TASA_IGV)) * Number(l.isc.tasa));
-  const baseIgv = r2(valorVenta + isc);
-  const igv = ['10', '17'].includes(l.afectacionIgv) ? r2(baseIgv * TASA_IGV) : 0;
-  const icbper = r2((l.cantidadBolsasIcbper ?? 0) * ICBPER);
-  const linea = `línea ${l.numeroLinea}`;
-  ok(l.valorVenta === f2(valorVenta), `${linea}: valorVenta ${l.valorVenta} ≠ ${f2(valorVenta)} (SPEC-003 R-01)`);
-  ok(l.montoIsc === f2(isc), `${linea}: montoIsc ${l.montoIsc} ≠ ${f2(isc)} (SPEC-003 R-02)`);
-  ok(l.baseIgv === f2(baseIgv), `${linea}: baseIgv ${l.baseIgv} ≠ ${f2(baseIgv)} (SPEC-003 R-03)`);
-  ok(l.igv === f2(igv), `${linea}: igv ${l.igv} ≠ ${f2(igv)} (SPEC-003 R-04)`);
-  ok(l.icbper === f2(icbper), `${linea}: icbper ${l.icbper} ≠ ${f2(icbper)} (SPEC-003 R-06)`);
-  ok(l.totalImpuestos === f2(isc + igv + icbper), `${linea}: totalImpuestos ${l.totalImpuestos} ≠ ${f2(isc + igv + icbper)}`);
-  const pu = (valorVenta + isc + igv) / cant;
-  ok(Math.abs(Number(l.precioUnitario) - pu) < 0.0001, `${linea}: precioUnitario ${l.precioUnitario} ≠ ${pu} (SPEC-003 R-08)`);
-  sumValor += valorVenta; sumIsc += isc; sumBaseIgv += baseIgv; sumIgvLineas += igv; sumIcbper += icbper; sumImpuestos += isc + igv + icbper;
+  if (l.isc?.system === '01') isc = r2(saleValue * Number(l.isc.rate));
+  if (l.isc?.system === '02') isc = r2(qty * Number(l.isc.fixedAmount));
+  if (l.isc?.system === '03') isc = r2(qty * (Number(l.isc.retailPrice) / (1 + IGV_RATE)) * Number(l.isc.rate));
+  const igvBase = r2(saleValue + isc);
+  const igv = ['10', '17'].includes(l.igvAffectation) ? r2(igvBase * IGV_RATE) : 0;
+  const icbper = r2((l.icbperBagCount ?? 0) * ICBPER);
+  const line = `line ${l.lineNumber}`;
+  ok(l.saleValue === f2(saleValue), `${line}: saleValue ${l.saleValue} ≠ ${f2(saleValue)} (SPEC-003 R-01)`);
+  ok(l.iscAmount === f2(isc), `${line}: iscAmount ${l.iscAmount} ≠ ${f2(isc)} (SPEC-003 R-02)`);
+  ok(l.igvBase === f2(igvBase), `${line}: igvBase ${l.igvBase} ≠ ${f2(igvBase)} (SPEC-003 R-03)`);
+  ok(l.igv === f2(igv), `${line}: igv ${l.igv} ≠ ${f2(igv)} (SPEC-003 R-04)`);
+  ok(l.icbper === f2(icbper), `${line}: icbper ${l.icbper} ≠ ${f2(icbper)} (SPEC-003 R-06)`);
+  ok(l.totalTaxes === f2(isc + igv + icbper), `${line}: totalTaxes ${l.totalTaxes} ≠ ${f2(isc + igv + icbper)}`);
+  const up = (saleValue + isc + igv) / qty;
+  ok(Math.abs(Number(l.unitPrice) - up) < 0.0001, `${line}: unitPrice ${l.unitPrice} ≠ ${up} (SPEC-003 R-08)`);
+  sumValue += saleValue; sumIsc += isc; sumIgvBase += igvBase; sumLineIgv += igv; sumIcbper += icbper;
 }
-const t = resp.totales;
-const igvGlobal = r2(sumBaseIgv * TASA_IGV);
-ok(t.totalGravadas === f2(sumValor), `totalGravadas ${t.totalGravadas} ≠ ${f2(sumValor)}`);
-ok(t.totalIsc === f2(sumIsc), `totalIsc ${t.totalIsc} ≠ ${f2(sumIsc)}`);
-ok(t.totalIgv === f2(igvGlobal), `totalIgv ${t.totalIgv} ≠ ${f2(igvGlobal)} (SPEC-003 R-09)`);
-ok(Math.abs(igvGlobal - sumIgvLineas) <= 1, 'Σ IGV de líneas difiere del IGV global en más de 1.00 (SPEC-003 R-09)');
-ok(t.totalIcbper === f2(sumIcbper), `totalIcbper ${t.totalIcbper} ≠ ${f2(sumIcbper)}`);
-ok(t.totalImpuestos === f2(sumIsc + igvGlobal + sumIcbper), `totalImpuestos ${t.totalImpuestos} incorrecto`);
-ok(t.importeTotal === f2(sumValor + sumIsc + igvGlobal + sumIcbper), `importeTotal ${t.importeTotal} ≠ ${f2(sumValor + sumIsc + igvGlobal + sumIcbper)} (INV-04)`);
-ok(t.totalPrecioVenta === t.importeTotal, 'totalPrecioVenta debe igualar importeTotal sin descuentos ni cargos');
+const t = resp.totals;
+const globalIgv = r2(sumIgvBase * IGV_RATE);
+ok(t.taxedTotal === f2(sumValue), `taxedTotal ${t.taxedTotal} ≠ ${f2(sumValue)}`);
+ok(t.iscTotal === f2(sumIsc), `iscTotal ${t.iscTotal} ≠ ${f2(sumIsc)}`);
+ok(t.igvTotal === f2(globalIgv), `igvTotal ${t.igvTotal} ≠ ${f2(globalIgv)} (SPEC-003 R-09)`);
+ok(Math.abs(globalIgv - sumLineIgv) <= 1, 'Σ line IGV differs from the global IGV by more than 1.00 (SPEC-003 R-09)');
+ok(t.icbperTotal === f2(sumIcbper), `icbperTotal ${t.icbperTotal} ≠ ${f2(sumIcbper)}`);
+ok(t.taxTotal === f2(sumIsc + globalIgv + sumIcbper), `taxTotal ${t.taxTotal} is wrong`);
+ok(t.payableAmount === f2(sumValue + sumIsc + globalIgv + sumIcbper), `payableAmount ${t.payableAmount} ≠ ${f2(sumValue + sumIsc + globalIgv + sumIcbper)} (INV-04)`);
+ok(t.salePriceTotal === t.payableAmount, 'salePriceTotal must equal payableAmount when there are no discounts or charges');
 
-// RUC módulo 11 (SPEC-004 R-01) sobre los RUC de los ejemplos.
-const rucValido = (ruc) => {
+// RUC modulus 11 (SPEC-004 R-01) on the example RUCs.
+const validRuc = (ruc) => {
   if (!/^(10|15|16|17|20)\d{9}$/.test(ruc)) return false;
-  const pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
-  const suma = pesos.reduce((s, w, i) => s + w * Number(ruc[i]), 0);
-  let dv = 11 - (suma % 11);
+  const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+  const sum = weights.reduce((s, w, i) => s + w * Number(ruc[i]), 0);
+  let dv = 11 - (sum % 11);
   if (dv === 10) dv = 0;
   if (dv === 11) dv = 1;
   return dv === Number(ruc[10]);
 };
-ok(rucValido(resp.emisor.ruc), `RUC emisor ${resp.emisor.ruc} no pasa módulo 11`);
-ok(rucValido(resp.cliente.numeroDocumento), `RUC cliente ${resp.cliente.numeroDocumento} no pasa módulo 11`);
-ok(rucValido('20123456786') && !rucValido('20123456787') && !rucValido('30123456786'), 'Casos de SPEC-004 AC-1/AC-2 no se cumplen');
+ok(validRuc(resp.issuer.ruc), `Issuer RUC ${resp.issuer.ruc} fails modulus 11`);
+ok(validRuc(resp.customer.documentNumber), `Customer RUC ${resp.customer.documentNumber} fails modulus 11`);
+ok(validRuc('20123456786') && !validRuc('20123456787') && !validRuc('30123456786'), 'SPEC-004 AC-1/AC-2 cases do not hold');
 
-// ---------- 4. Matriz de trazabilidad ----------
+// ---------- 4. Traceability matrix ----------
 const roots = {
-  Comprobante: { file: 'comprobante.schema.json', ptr: '#/$defs/Comprobante' },
-  Nota: { file: 'nota.schema.json', ptr: '#' },
-  Producto: { file: 'producto.schema.json', ptr: '#' },
-  Cdr: { file: 'respuesta-cdr.schema.json', ptr: '#' },
-  MovimientoInventario: { file: 'movimiento-inventario.schema.json', ptr: '#' },
+  Invoice: { file: 'invoice.schema.json', ptr: '#/$defs/Invoice' },
+  Note: { file: 'note.schema.json', ptr: '#' },
+  Product: { file: 'product.schema.json', ptr: '#' },
+  Cdr: { file: 'cdr-response.schema.json', ptr: '#' },
+  InventoryMovement: { file: 'inventory-movement.schema.json', ptr: '#' },
 };
 const deref = (file, ptr) => {
   let node = schemas[file];
@@ -155,7 +155,7 @@ const follow = ({ file, node }) => {
   }
   return { file, node };
 };
-// Devuelve las propiedades visibles de un nodo (sigue $ref y allOf).
+// Visible properties of a node (follows $ref and allOf).
 const propsOf = (ctx) => {
   const { file, node } = follow(ctx);
   const out = {};
@@ -177,44 +177,44 @@ const resolvePath = (path) => {
   }
   return true;
 };
-const matriz = readFileSync(p('docs', '05-matriz-trazabilidad.md'), 'utf8');
-const filas = matriz.split('\n').filter((l) => /^\| \**T-\d{2}/.test(l));
-ok(filas.length >= 50, `La matriz tiene solo ${filas.length} filas T-nn`);
+const matrix = readFileSync(p('docs', '05-traceability-matrix.md'), 'utf8');
+const rows = matrix.split('\n').filter((l) => /^\| \**T-\d{2}/.test(l));
+ok(rows.length >= 50, `The matrix has only ${rows.length} T-nn rows`);
 const ids = new Set();
-for (const fila of filas) {
-  const cols = fila.split(' | ');
+for (const row of rows) {
+  const cols = row.split(' | ');
   const id = cols[0].replace(/[|* ]/g, '');
-  ok(!ids.has(id), `Fila duplicada en la matriz: ${id}`);
+  ok(!ids.has(id), `Duplicate row in the matrix: ${id}`);
   ids.add(id);
   for (const m of cols[2].matchAll(/`cat-(\d{2}):([^`]+)`/g)) {
-    ok(catalogos[m[1]]?.has(m[2]), `${id}: código cat-${m[1]}:${m[2]} no existe en specs/catalogos`);
+    ok(catalogs[m[1]]?.has(m[2]), `${id}: code cat-${m[1]}:${m[2]} does not exist in specs/catalogs`);
   }
   for (const m of cols[5].matchAll(/`([A-Za-z]+\.[A-Za-z.\[\]]+)`/g)) {
-    ok(resolvePath(m[1]), `${id}: ruta DTO ${m[1]} no existe en los JSON Schemas`);
+    ok(resolvePath(m[1]), `${id}: DTO path ${m[1]} does not exist in the JSON Schemas`);
   }
-  ok(/^\d{3}$/.test(cols[6].replace(/[| ]/g, '')), `${id}: spec inválida "${cols[6]}"`);
+  ok(/^\d{3}$/.test(cols[6].replace(/[| ]/g, '')), `${id}: invalid spec "${cols[6]}"`);
 }
-// Cobertura (advertencias): hojas del Comprobante sin fila en la matriz.
-// Campos justificados en la sección 10 de la matriz; `cdr.*` se cubre con las filas Cdr (T-70…T-72).
-const sinUbl = new Set(['id', 'estado', 'correlativo', 'serie', 'ubigeo', 'correo', 'montoFijo', 'precioVentaPublico', 'totalExportacion']);
-const subarbolesSinUbl = ['cdr.', 'enlaces.'];
-const usados = new Set([...matriz.matchAll(/`Comprobante\.([A-Za-z.\[\]]+)`/g)].map((m) => m[1].split('.').pop().replace('[]', '')));
-const hojas = (ctx, prefix, depth = 0) => {
+// Coverage (warnings): Invoice leaves without a matrix row.
+// Fields justified in section 10 of the matrix; `cdr.*` is covered by the Cdr rows (T-70…T-72).
+const noUbl = new Set(['id', 'status', 'sequenceNumber', 'series', 'ubigeo', 'email', 'fixedAmount', 'retailPrice', 'exportTotal']);
+const noUblSubtrees = ['cdr.', 'links.'];
+const used = new Set([...matrix.matchAll(/`Invoice\.([A-Za-z.\[\]]+)`/g)].map((m) => m[1].split('.').pop().replace('[]', '')));
+const leaves = (ctx, prefix, depth = 0) => {
   if (depth > 4) return [];
   return Object.entries(propsOf(ctx)).flatMap(([k, v]) => {
     const n = follow(v).node;
-    if (n.type === 'array' && n.items) return hojas({ file: follow(v).file, node: n.items }, `${prefix}${k}[].`, depth + 1);
-    if (n.properties || n.allOf) return hojas(v, `${prefix}${k}.`, depth + 1);
+    if (n.type === 'array' && n.items) return leaves({ file: follow(v).file, node: n.items }, `${prefix}${k}[].`, depth + 1);
+    if (n.properties || n.allOf) return leaves(v, `${prefix}${k}.`, depth + 1);
     return [`${prefix}${k}`];
   });
 };
-for (const h of hojas(deref('comprobante.schema.json', '#/$defs/Comprobante'), '')) {
+for (const h of leaves(deref('invoice.schema.json', '#/$defs/Invoice'), '')) {
   const leaf = h.split('.').pop().replace('[]', '');
-  if (subarbolesSinUbl.some((s) => h.startsWith(s))) continue;
-  if (!usados.has(leaf) && !sinUbl.has(leaf)) warnings.push(`Campo Comprobante.${h} sin fila en la matriz`);
+  if (noUblSubtrees.some((s) => h.startsWith(s))) continue;
+  if (!used.has(leaf) && !noUbl.has(leaf)) warnings.push(`Field Invoice.${h} has no matrix row`);
 }
 
-// ---------- 5. Referencias a reglas y enlaces ----------
+// ---------- 5. Rule references and links ----------
 const mdFiles = [];
 const walk = (dir) => {
   for (const f of readdirSync(dir)) {
@@ -229,28 +229,28 @@ const specFiles = Object.fromEntries(readdirSync(p('specs', 'features')).map((f)
 for (const file of mdFiles) {
   const text = readFileSync(file, 'utf8');
   for (const m of text.matchAll(/SPEC-(\d{3})(?:\/| )([RM]-\d{2})/g)) {
-    ok(specFiles[m[1]]?.includes(`| ${m[2]} |`), `${file.replace(root, '')}: referencia a SPEC-${m[1]} ${m[2]} inexistente`);
+    ok(specFiles[m[1]]?.includes(`| ${m[2]} |`), `${file.replace(root, '')}: reference to non-existent SPEC-${m[1]} ${m[2]}`);
   }
   for (const m of text.matchAll(/\]\(([^)#\s]+)(#[^)]*)?\)/g)) {
     if (/^(https?:|mailto:)/.test(m[1])) continue;
-    ok(existsSync(resolve(dirname(file), m[1])), `${file.replace(root, '')}: enlace roto → ${m[1]}`);
+    ok(existsSync(resolve(dirname(file), m[1])), `${file.replace(root, '')}: broken link → ${m[1]}`);
   }
 }
 for (const [num, text] of Object.entries(specFiles)) {
-  ok(/\*\*AC-1:\*\*/.test(text), `SPEC-${num} sin criterios de aceptación`);
+  ok(/\*\*AC-1:\*\*/.test(text), `SPEC-${num} has no acceptance criteria`);
 }
-// Las referencias a reglas desde los esquemas y openapi también deben existir.
+// Rule references from the schemas and openapi must exist as well.
 for (const f of [...Object.keys(schemas).map((s) => join(schemaDir, s)), p('specs', 'api', 'openapi.yaml')]) {
   for (const m of readFileSync(f, 'utf8').matchAll(/SPEC-(\d{3})\/([RM]-\d{2})/g)) {
-    ok(specFiles[m[1]]?.includes(`| ${m[2]} |`), `${f.replace(root, '')}: referencia a SPEC-${m[1]}/${m[2]} inexistente`);
+    ok(specFiles[m[1]]?.includes(`| ${m[2]} |`), `${f.replace(root, '')}: reference to non-existent SPEC-${m[1]}/${m[2]}`);
   }
 }
 
-// ---------- Resultado ----------
+// ---------- Result ----------
 for (const w of warnings) console.warn(`⚠  ${w}`);
 if (errors.length) {
   for (const e of errors) console.error(`✗ ${e}`);
-  console.error(`\n${errors.length} error(es) en ${checks} verificaciones.`);
+  console.error(`\n${errors.length} error(s) in ${checks} checks.`);
   process.exit(1);
 }
-console.log(`✓ ${checks} verificaciones correctas (${filas.length} filas de matriz, ${mdFiles.length} documentos, ${Object.keys(schemas).length} esquemas, ${Object.keys(catalogos).length} catálogos).`);
+console.log(`✓ ${checks} checks passed (${rows.length} matrix rows, ${mdFiles.length} documents, ${Object.keys(schemas).length} schemas, ${Object.keys(catalogs).length} catalogs).`);

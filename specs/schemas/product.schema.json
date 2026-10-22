@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abc-software.pe/specs/schemas/product.schema.json",
+  "title": "ProductDTO",
+  "description": "ABC catalog product with its default tax configuration. SPEC-003, SPEC-010. UBL: cac:Item.",
+  "type": "object",
+  "required": ["code", "description", "unitOfMeasure", "igvAffectation", "unitValue"],
+  "properties": {
+    "code": { "type": "string", "pattern": "^[A-Z0-9-]{1,30}$", "description": "UBL: cac:SellersItemIdentification/cbc:ID" },
+    "description": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "sunatProductCode": { "type": "string", "pattern": "^[0-9]{8}$", "description": "UNSPSC (catalog 25). UBL: cac:CommodityClassification/cbc:ItemClassificationCode" },
+    "unitOfMeasure": { "$ref": "common.schema.json#/$defs/UnitOfMeasure" },
+    "igvAffectation": { "$ref": "common.schema.json#/$defs/IgvAffectation" },
+    "unitValue": { "$ref": "common.schema.json#/$defs/UnitAmount", "description": "Before taxes." },
+    "isc": { "$ref": "#/$defs/IscConfig" },
+    "icbperApplicable": { "type": "boolean", "default": false, "description": "true if the item is a plastic bag subject to ICBPER." },
+    "minimumStock": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" },
+    "active": { "type": "boolean", "default": true },
+    "requiresReview": { "type": "boolean", "default": false, "description": "true if the tax configuration is provisional (product created by migration, SPEC-009 M-04)." },
+    "origin": { "$ref": "common.schema.json#/$defs/DataOrigin" }
+  },
+  "$defs": {
+    "IscConfig": {
+      "description": "ISC configuration according to catalog 08.",
+      "type": "object",
+      "required": ["system"],
+      "properties": {
+        "system": { "$ref": "common.schema.json#/$defs/IscSystem" },
+        "rate": { "$ref": "common.schema.json#/$defs/Rate" },
+        "fixedAmount": { "$ref": "common.schema.json#/$defs/UnitAmount" },
+        "retailPrice": { "$ref": "common.schema.json#/$defs/UnitAmount" }
+      },
+      "allOf": [
+        { "if": { "properties": { "system": { "const": "01" } } }, "then": { "required": ["rate"] } },
+        { "if": { "properties": { "system": { "const": "02" } } }, "then": { "required": ["fixedAmount"] } },
+        { "if": { "properties": { "system": { "const": "03" } } }, "then": { "required": ["rate", "retailPrice"] } }
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

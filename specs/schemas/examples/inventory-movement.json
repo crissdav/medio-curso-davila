@@ -1,0 +1,17 @@
+{
+  "id": "9b2e7c10-4f3a-4d21-8c5e-1a2b3c4d5e6f",
+  "date": "2024-03-05",
+  "type": "OUTBOUND",
+  "productCode": "CER-620",
+  "quantity": "12",
+  "documentReference": {
+    "type": "LEGACY_INTERNAL",
+    "number": "N-0458"
+  },
+  "origin": {
+    "system": "LEGACY",
+    "migrationBatch": "MIG-2026-10-001",
+    "sourceRow": 1834,
+    "sourceHash": "5d41402abc4b2a76b9719d911017c5925d41402abc4b2a76b9719d911017c592"
+  }
+}

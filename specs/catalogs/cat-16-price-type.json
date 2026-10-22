@@ -1,0 +1,10 @@
+{
+  "number": "16",
+  "name": "Unit sale price type code",
+  "listAgencyName": "PE:SUNAT",
+  "listURI": "urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16",
+  "codes": [
+    { "code": "01", "description": "Unit price (IGV included)", "officialName": "Precio unitario (incluye el IGV)" },
+    { "code": "02", "description": "Reference unit value for non-onerous operations", "officialName": "Valor referencial unitario en operaciones no onerosas" }
+  ]
+}

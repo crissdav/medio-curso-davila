@@ -1,0 +1,26 @@
+{
+  "documentType": "07",
+  "series": "F001",
+  "issueDate": "2026-10-23",
+  "affectedDocument": {
+    "documentType": "01",
+    "number": "F001-00000123"
+  },
+  "noteType": "07",
+  "reason": "Devolución de 2 gaseosas con envase dañado",
+  "currency": "PEN",
+  "items": [
+    {
+      "productCode": "GAS-3L",
+      "description": "Gaseosa 3 L",
+      "quantity": "2",
+      "unitOfMeasure": "NIU",
+      "unitValue": "8.00",
+      "igvAffectation": "10",
+      "isc": {
+        "system": "01",
+        "rate": "0.17"
+      }
+    }
+  ]
+}
