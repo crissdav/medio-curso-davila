@@ -5,6 +5,7 @@
 - **Related:** UC-03, UC-04 · SPEC-001, 003, 006 · Catalogs 09 and 10
 
 ## Summary
+A note is its own document, not a kind of invoice: `Invoice` and `Note` extend `SalesDocument`.
 Issue Credit Notes (07, UBL `CreditNote`) and Debit Notes (08, UBL `DebitNote`) that modify an
 already accepted document.
 
@@ -25,12 +26,12 @@ penalties can only be reflected through notes.
 
 ## Acceptance criteria
 - **AC-1:** Given the accepted invoice `F001-00000123`, when I issue a type 07 credit note for 2 soft drinks, then it is issued with series F001 and an inbound movement of 2 units is recorded.
-- **AC-2:** Given a sales receipt, when I issue a note with series `F001`, then I get 400 `SERIES_MISMATCH`.
-- **AC-3:** Given a S/ 100 invoice with a previous S/ 80 credit note, when I issue another S/ 30 credit note, then I get 400.
+- **AC-2:** Given a sales receipt, when I issue a note with series `F001`, then I get 422 `SERIES_MISMATCH`.
+- **AC-3:** Given a S/ 100 invoice with a previous S/ 80 credit note, when I issue another S/ 30 credit note, then I get 422.
 - **AC-4:** Given a debit note with `noteType` = 05, then I get 400 (not in catalog 10).
 
 ## Contracts
-- `POST /notes` · [note.schema.json](../schemas/note.schema.json) · example [credit-note-request.json](../schemas/examples/credit-note-request.json)
+- `POST /notes` · [note.schema.json](../schemas/note.schema.json) · response `IssuedNote` · example [credit-note-request.json](../schemas/examples/credit-note-request.json)
 
 ## Open questions
 - Maximum period to issue a credit note on a document (check the current regulations).

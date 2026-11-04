@@ -31,7 +31,8 @@
       "igvAffectation": "10",
       "isc": {
         "system": "02",
-        "fixedAmount": "1.25"
+        "fixedAmount": "2.00",
+        "unitConversionFactor": "0.62"
       }
     },
     {

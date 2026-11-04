@@ -32,14 +32,15 @@ The current system "does not generate XMLs" nor issues legal documents (RS 097-2
 | R-10 | The Excel report (UC-26) filters by date range and establishment, with detail per document or per item, and includes accepted, rejected and voided documents. |
 
 ## Acceptance criteria
-- **AC-1:** Given a customer with a valid and active RUC, when I issue an invoice with series F001, then I get 201 with number `F001-<sequence>` and status `ACCEPTED` or `OBSERVED`.
+- **AC-1:** Given a customer with a valid and active RUC, when I issue an invoice with series F001, then I get 201 with number `F001-<sequence>` and the CDR result as its status.
 - **AC-2:** Given an invoice with a DNI customer, when I issue it, then I get 400 `INVALID_RUC` / schema validation error.
-- **AC-3:** Given a S/ 750 sales receipt with customer `-`, when I issue it, then I get 400 `CUSTOMER_REQUIRED_FOR_RECEIPT`.
+- **AC-3:** Given a S/ 750 sales receipt with customer `-`, when I issue it, then I get 422 `CUSTOMER_REQUIRED_FOR_RECEIPT`.
 - **AC-4:** Given a USD sale without an exchange rate, when I issue it, then I get 400.
-- **AC-5:** Given a credit invoice whose installments do not add up to the pending amount, when I issue it, then I get 400.
+- **AC-5:** Given a credit invoice whose installments do not add up to the pending amount, when I issue it, then I get 422.
 - **AC-6:** Given the example [invoice-request.json](../schemas/examples/invoice-request.json), when I issue it, then the totals match [invoice-response.json](../schemas/examples/invoice-response.json).
-- **AC-7:** Given the same `Idempotency-Key` sent twice, then the same document is returned and the sequence number advances only once.
-- **AC-8:** Given invoice `F001-123` with a total of 377.81, when I look it up publicly with 377.80, then I get 404; with 377.81 I get 200 and the download links.
+- **AC-7:** Given the same `Idempotency-Key` sent twice, then the second response is 200 with the same document and the sequence number advances only once.
+- **AC-8:** Given invoice `F001-123` with a total of 377.67, when I look it up publicly with 377.66, then I get 404; with 377.67 I get 200 and the download links.
+- **AC-9:** Given a document rejected by SUNAT, then the response is 201 with status `REJECTED`, not an error.
 
 ## Contracts
 - `POST /invoices` · [invoice.schema.json](../schemas/invoice.schema.json)

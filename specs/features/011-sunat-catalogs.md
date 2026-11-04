@@ -7,6 +7,7 @@
 ## Summary
 Single, versioned source of the official SUNAT codes used in validations, calculation and XML.
 Each code carries an English `description` and its official Spanish `officialName`.
+The PLE tables are not XML catalogs: they live in [specs/ple-tables/](../ple-tables/) and belong to SPEC-013.
 
 ## Catalogs included in phase 1
 | No. | Name | Main usage |
@@ -33,5 +34,5 @@ Each code carries an English `description` and its official Spanish `officialNam
 
 ## Acceptance criteria
 - **AC-1:** `GET /catalogs/08` returns the 3 ISC calculation systems.
-- **AC-2:** Given a line with affectation `99`, then 400.
-- **AC-3:** Given an issue with operation type `0200` in phase 1, then 400.
+- **AC-2:** Given a line with affectation `99`, then 400 (fails the schema).
+- **AC-3:** Given an issue with operation type `0200` in phase 1, then 422.

@@ -22,9 +22,9 @@ flowchart LR
         n[nro_documento]
     end
     subgraph N["New model"]
-        MI["InventoryMovement<br/>date · type · quantity"]
+        MI["InventoryMovement<br/>date · type · quantity<br/>establishment · existence type<br/>operation type · balanceAfter"]
         PR["Product<br/>code · description<br/>requiresReview=true"]
-        DR["DocumentReference<br/>type=LEGACY_INTERNAL"]
+        DR["SourceDocument<br/>kind=LEGACY_INTERNAL · type 00"]
         OR["DataOrigin<br/>LEGACY · batch · row · hash"]
     end
     f -->|"normalize to ISO-8601 (M-02)"| MI
@@ -44,7 +44,8 @@ flowchart LR
 | `ingreso` | `InventoryMovement` type `INBOUND`, `quantity` | Number > 0 | Quarantine (M-03) |
 | `salida` | `InventoryMovement` type `OUTBOUND`, `quantity` | Number > 0 | Quarantine (M-03) |
 | `producto` | `Product.description` + generated `code`; `InventoryMovement.productCode` | Trim, uppercase, no accents, deduplicate | Quarantine if empty |
-| `nro_documento` | `DocumentReference{type: LEGACY_INTERNAL, number}` | None | Empty allowed |
+| `nro_documento` | `SourceDocument{kind: LEGACY_INTERNAL, documentType: 00, series: 0, number}` | None; `0` if empty | Empty allowed |
+| (not in the legacy system) | `establishmentCode`, `existenceType`, `operationType`, `balanceAfter` | Defaults and running balance (M-10 … M-12) | — |
 | (whole row) | `DataOrigin{system: LEGACY, migrationBatch, sourceRow, sourceHash}` | SHA-256 | — |
 
 ## 3. Process (ETL with audit trail)
@@ -52,7 +53,7 @@ flowchart LR
 ```mermaid
 flowchart TB
     A["1 · Extract<br/>CSV / dump (read-only)"] --> B["2 · Profile<br/>date formats, nulls,<br/>distinct product names"]
-    B --> C["3 · Dry run<br/>applies M-01..M-05, nothing persisted"]
+    B --> C["3 · Dry run<br/>applies M-01..M-05 and M-10..M-12, nothing persisted"]
     C --> D{"Acceptable<br/>issues?"}
     D -- No --> E["Fix at source<br/>or synonym dictionary"] --> C
     D -- Yes --> F["4 · Load<br/>idempotent by sourceHash (M-06)"]
@@ -61,7 +62,14 @@ flowchart TB
     H --> I["Batch COMPLETED"]
 ```
 
-## 4. Traceability guarantees (RS 234-2006)
+## 4. Link with format 12.1
+
+Migrated movements feed format 12.1 for their historical periods (SPEC-013 R-19). The legacy system has neither
+establishment, existence type, table 6 unit nor operation type, so those values are assigned by rules M-04 and
+M-10 … M-12, and the administrator confirms the product data before generating a book. The K-nn rows in
+[section 12 of the matrix](05-traceability-matrix.md) show the origin of each field.
+
+## 5. Traceability guarantees (RS 234-2006)
 
 1. **Bidirectional:** from any migrated movement you reach the source row (`sourceRow` +
    `sourceHash`), and from any source row you find its movement(s).
@@ -70,7 +78,7 @@ flowchart TB
 4. **Immutability:** migrated movements are never edited; they are corrected with an `ADJUSTMENT`.
 5. **Untouched source:** the legacy system is not modified and is archived read-only.
 
-## 5. Special cases
+## 6. Special cases
 
 | Case | Handling |
 |---|---|

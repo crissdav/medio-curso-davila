@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://abc-software.pe/specs/schemas/ledger.schema.json",
+  "title": "Electronic books (PLE) DTOs",
+  "description": "One DTO per record of format 14.1 (sales record, code 140100) and format 12.1 (inventory in physical units, code 120100). SPEC-013. Field numbers refer to Annex 2 of RS 286-2009/SUNAT as amended.",
+  "$defs": {
+    "PleDate": { "type": "string", "pattern": "^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/[0-9]{4}$", "description": "DD/MM/YYYY." },
+    "PlePeriod": { "type": "string", "pattern": "^[0-9]{4}(0[1-9]|1[0-2])00$", "description": "Field 1: YYYYMM00." },
+    "LedgerEntryStatus": { "type": "string", "enum": ["0", "1", "2", "8", "9"], "description": "Entry status: 0 optional entry with no IGV effect; 1 belongs to the period; 2 document voided (inutilizado); 8 earlier period, not previously recorded; 9 earlier period, already recorded." },
+    "SalesRecordLine": {
+      "description": "Format 14.1 record (35 fields).",
+      "type": "object",
+      "required": ["period", "cuo", "issueDate", "documentType", "series", "number", "taxableBase", "igv", "exemptAmount", "unaffectedAmount", "isc", "icbper", "otherCharges", "total", "currency", "exchangeRate", "status"],
+      "properties": {
+        "period": { "$ref": "#/$defs/PlePeriod" },
+        "cuo": { "type": "string", "maxLength": 40, "pattern": "^[^&]+$", "description": "Field 2: unique operation code." },
+        "entryNumber": { "type": "string", "pattern": "^[AMC][^&]{1,9}$", "description": "Field 3: mandatory when status is 8 or 9." },
+        "issueDate": { "$ref": "#/$defs/PleDate" },
+        "dueDate": { "$ref": "#/$defs/PleDate" },
+        "documentType": { "$ref": "common.schema.json#/$defs/PleDocumentType" },
+        "series": { "type": "string", "maxLength": 20 },
+        "number": { "type": "string", "maxLength": 20 },
+        "finalNumber": { "type": "string", "maxLength": 20, "description": "Field 9: last number of a daily consolidated range of sales receipts." },
+        "customerDocumentType": { "$ref": "common.schema.json#/$defs/PleIdentityDocumentType" },
+        "customerDocumentNumber": { "type": "string", "maxLength": 15 },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "exportValue": { "$ref": "common.schema.json#/$defs/Amount" },
+        "taxableBase": { "$ref": "common.schema.json#/$defs/Amount", "description": "Field 14: taxed base, excluding ISC." },
+        "taxableBaseDiscount": { "$ref": "common.schema.json#/$defs/Amount" },
+        "igv": { "$ref": "common.schema.json#/$defs/Amount" },
+        "igvDiscount": { "$ref": "common.schema.json#/$defs/Amount" },
+        "exemptAmount": { "$ref": "common.schema.json#/$defs/Amount" },
+        "unaffectedAmount": { "$ref": "common.schema.json#/$defs/Amount" },
+        "isc": { "$ref": "common.schema.json#/$defs/Amount" },
+        "icbper": { "$ref": "common.schema.json#/$defs/Amount" },
+        "otherCharges": { "$ref": "common.schema.json#/$defs/Amount" },
+        "total": { "$ref": "common.schema.json#/$defs/Amount" },
+        "currency": { "$ref": "common.schema.json#/$defs/Currency" },
+        "exchangeRate": { "type": "string", "pattern": "^[0-9]\\.[0-9]{3}$" },
+        "modifiedDocument": {
+          "description": "Fields 28–31: document modified by a credit or debit note.",
+          "type": "object",
+          "required": ["issueDate", "documentType", "series", "number"],
+          "properties": {
+            "issueDate": { "$ref": "#/$defs/PleDate" },
+            "documentType": { "$ref": "common.schema.json#/$defs/PleDocumentType" },
+            "series": { "type": "string", "maxLength": 20 },
+            "number": { "type": "string", "maxLength": 20 }
+          },
+          "additionalProperties": false
+        },
+        "paidWithPaymentMedium": { "type": "boolean", "description": "Field 34." },
+        "status": { "$ref": "#/$defs/LedgerEntryStatus" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "documentType": { "enum": ["07", "08"] } }, "required": ["documentType"] },
+          "then": { "required": ["modifiedDocument"] }
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["8", "9"] } }, "required": ["status"] },
+          "then": { "required": ["entryNumber"] }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "InventoryRecordLine": {
+      "description": "Format 12.1 record (19 fields). In the TXT, exits are negative.",
+      "type": "object",
+      "required": ["period", "cuo", "entryNumber", "establishmentCode", "existenceType", "productCode", "sunatProductCode", "documentDate", "documentType", "series", "number", "operationType", "description", "unitOfMeasure", "entries", "exits", "status"],
+      "properties": {
+        "period": { "$ref": "#/$defs/PlePeriod" },
+        "cuo": { "type": "string", "maxLength": 40 },
+        "entryNumber": { "type": "string", "pattern": "^[AMC].{1,9}$" },
+        "establishmentCode": { "$ref": "common.schema.json#/$defs/EstablishmentCode" },
+        "existenceType": { "$ref": "common.schema.json#/$defs/ExistenceType" },
+        "productCode": { "type": "string", "maxLength": 24 },
+        "sunatProductCode": { "type": "string", "pattern": "^[0-9]{16}$", "description": "Field 9: UNSPSC code (8 digits) followed by 8 zeros." },
+        "documentDate": { "$ref": "#/$defs/PleDate" },
+        "documentType": { "$ref": "common.schema.json#/$defs/PleDocumentType" },
+        "series": { "type": "string", "maxLength": 20 },
+        "number": { "type": "string", "maxLength": 20 },
+        "operationType": { "$ref": "common.schema.json#/$defs/InventoryOperationType" },
+        "description": { "type": "string", "maxLength": 80 },
+        "unitOfMeasure": { "$ref": "common.schema.json#/$defs/PleUnitOfMeasure" },
+        "entries": { "$ref": "common.schema.json#/$defs/SignedQuantity" },
+        "exits": { "$ref": "common.schema.json#/$defs/SignedQuantity" },
+        "balance": { "$ref": "common.schema.json#/$defs/SignedQuantity", "description": "Final balance column of the printed format; not part of the TXT." },
+        "status": { "type": "string", "enum": ["1", "8", "9"] }
+      },
+      "additionalProperties": false
+    },
+    "LedgerPeriodStatus": {
+      "type": "object",
+      "required": ["period", "status"],
+      "properties": {
+        "period": { "$ref": "common.schema.json#/$defs/LedgerPeriod" },
+        "status": { "type": "string", "enum": ["OPEN", "CLOSED"] },
+        "closedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "number": "02",
+  "name": "PLE table 2 — Identity document type",
+  "source": "RS 234-2006/SUNAT, Annex (Table 2)",
+  "codes": [
+    { "code": "0", "description": "Other document types", "officialName": "OTROS TIPOS DE DOCUMENTOS" },
+    { "code": "1", "description": "National ID (DNI)", "officialName": "DOCUMENTO NACIONAL DE IDENTIDAD (DNI)" },
+    { "code": "4", "description": "Foreigner ID card", "officialName": "CARNET DE EXTRANJERIA" },
+    { "code": "6", "description": "Taxpayer ID (RUC)", "officialName": "REGISTRO ÚNICO DE CONTRIBUYENTES" },
+    { "code": "7", "description": "Passport", "officialName": "PASAPORTE" }
+  ]
+}

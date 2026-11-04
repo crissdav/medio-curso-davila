@@ -1,0 +1,13 @@
+{
+  "number": "05",
+  "name": "PLE table 5 — Existence type",
+  "source": "RS 234-2006/SUNAT, Annex (Table 5)",
+  "codes": [
+    { "code": "01", "description": "Merchandise", "officialName": "MERCADERÍA" },
+    { "code": "02", "description": "Finished product", "officialName": "PRODUCTO TERMINADO" },
+    { "code": "03", "description": "Raw and auxiliary materials", "officialName": "MATERIAS PRIMAS Y AUXILIARES - MATERIALES" },
+    { "code": "04", "description": "Containers and packaging", "officialName": "ENVASES Y EMBALAJES" },
+    { "code": "05", "description": "Miscellaneous supplies", "officialName": "SUMINISTROS DIVERSOS" },
+    { "code": "99", "description": "Other (specify)", "officialName": "OTROS (ESPECIFICAR)" }
+  ]
+}

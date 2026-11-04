@@ -51,17 +51,18 @@
       "igvAffectation": "10",
       "isc": {
         "system": "02",
-        "fixedAmount": "1.25"
+        "fixedAmount": "2.00",
+        "unitConversionFactor": "0.62"
       },
-      "iscAmount": "15.00",
-      "unitPrice": "6.195",
+      "iscAmount": "14.88",
+      "unitPrice": "6.1833333333",
       "saleValue": "48.00",
       "iscBase": "48.00",
-      "igvBase": "63.00",
+      "igvBase": "62.88",
       "igvRate": "0.18",
-      "igv": "11.34",
+      "igv": "11.32",
       "icbper": "0.00",
-      "totalTaxes": "26.34"
+      "totalTaxes": "26.20"
     },
     {
       "lineNumber": 3,
@@ -113,15 +114,15 @@
     "exemptTotal": "0.00",
     "unaffectedTotal": "0.00",
     "freeTotal": "0.00",
-    "iscTotal": "23.16",
-    "igvTotal": "57.48",
+    "iscTotal": "23.04",
+    "igvTotal": "57.46",
     "icbperTotal": "1.00",
-    "taxTotal": "81.64",
+    "taxTotal": "81.50",
     "saleValueTotal": "296.17",
-    "salePriceTotal": "377.81",
+    "salePriceTotal": "377.67",
     "discountTotal": "0.00",
-    "payableAmount": "377.81",
-    "amountInWords": "TRESCIENTOS SETENTA Y SIETE CON 81/100 SOLES"
+    "payableAmount": "377.67",
+    "amountInWords": "TRESCIENTOS SETENTA Y SIETE CON 67/100 SOLES"
   },
   "status": "ACCEPTED",
   "documentHash": "qXk3m1V8Yb2Zc9Lw0eR4tU7iO6p=",

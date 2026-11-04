@@ -1,0 +1,16 @@
+{
+  "name": "UnitMappingCatalog — catalog 03 (UN/ECE, used in the XML) to PLE table 6 (used in format 12.1)",
+  "description": "quantity in table 6 = quantity in catalog 03 × factor. ZZ is a service: it creates no inventory movement, so it has no table 6 code.",
+  "mappings": [
+    { "catalog03": "NIU", "table06": "07", "factor": "1" },
+    { "catalog03": "ZZ", "table06": null, "factor": null },
+    { "catalog03": "KGM", "table06": "01", "factor": "1" },
+    { "catalog03": "GRM", "table06": "06", "factor": "1" },
+    { "catalog03": "LTR", "table06": "08", "factor": "1" },
+    { "catalog03": "MLT", "table06": "08", "factor": "0.001" },
+    { "catalog03": "BX", "table06": "12", "factor": "1" },
+    { "catalog03": "BG", "table06": "99", "factor": "1" },
+    { "catalog03": "PK", "table06": "99", "factor": "1" },
+    { "catalog03": "DZN", "table06": "07", "factor": "12" }
+  ]
+}

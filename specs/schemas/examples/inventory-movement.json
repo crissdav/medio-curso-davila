@@ -2,12 +2,19 @@
   "id": "9b2e7c10-4f3a-4d21-8c5e-1a2b3c4d5e6f",
   "date": "2024-03-05",
   "type": "OUTBOUND",
+  "establishmentCode": "0000",
   "productCode": "CER-620",
+  "existenceType": "01",
+  "unitOfMeasure": "NIU",
+  "operationType": "99",
   "quantity": "12",
-  "documentReference": {
-    "type": "LEGACY_INTERNAL",
+  "sourceDocument": {
+    "kind": "LEGACY_INTERNAL",
+    "documentType": "00",
+    "series": "0",
     "number": "N-0458"
   },
+  "balanceAfter": "88",
   "origin": {
     "system": "LEGACY",
     "migrationBatch": "MIG-2026-10-001",

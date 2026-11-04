@@ -22,4 +22,4 @@ Build and submit asynchronously (`sendSummary` → ticket → `getStatus`):
 ## Acceptance criteria
 - **AC-1:** Given 30 sales receipts from 10/21, when the scheduler runs on 10/22, then `RC-20261022-1` is submitted and the ticket is stored.
 - **AC-2:** Given a ticket with CDR code 0, then the voided documents become `VOIDED`.
-- **AC-3:** Given a voiding request for a `REJECTED` document, then 400.
+- **AC-3:** Given a voiding request for a `REJECTED` document, then 422.

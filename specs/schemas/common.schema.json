@@ -88,6 +88,49 @@
       "type": "string",
       "enum": ["DRAFT", "SIGNED", "PENDING_SUBMISSION", "SUBMITTED", "ACCEPTED", "OBSERVED", "REJECTED", "VOIDED"]
     },
+    "SignedQuantity": {
+      "description": "Quantity that may be negative or zero: running stock balances and format 12.1 entries/exits.",
+      "type": "string",
+      "pattern": "^-?[0-9]{1,12}(\\.[0-9]{1,10})?$",
+      "examples": ["88", "-12.00"]
+    },
+    "EstablishmentCode": {
+      "description": "SUNAT annex establishment code (0000 = fiscal address). Format 12.1 field 4 also allows 9999 for third-party warehouses and a 3-digit suffix.",
+      "type": "string",
+      "pattern": "^[0-9]{4}([0-9]{1,3})?$",
+      "examples": ["0000"]
+    },
+    "LedgerPeriod": {
+      "description": "Book period YYYYMM (exported as YYYYMM00 in the PLE files).",
+      "type": "string",
+      "pattern": "^[0-9]{4}(0[1-9]|1[0-2])$",
+      "examples": ["202610"]
+    },
+    "PleIdentityDocumentType": {
+      "description": "PLE table 2.",
+      "type": "string",
+      "enum": ["0", "1", "4", "6", "7"]
+    },
+    "ExistenceType": {
+      "description": "PLE table 5.",
+      "type": "string",
+      "enum": ["01", "02", "03", "04", "05", "99"]
+    },
+    "PleUnitOfMeasure": {
+      "description": "PLE table 6. Not UN/ECE: derived from catalog 03 through specs/ple-tables/unit-mapping-cat03-to-table06.json.",
+      "type": "string",
+      "enum": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "99"]
+    },
+    "PleDocumentType": {
+      "description": "PLE table 10 (subset used by ABC).",
+      "type": "string",
+      "enum": ["00", "01", "03", "07", "08", "09", "12"]
+    },
+    "InventoryOperationType": {
+      "description": "PLE table 12.",
+      "type": "string",
+      "enum": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "99"]
+    },
     "DataOrigin": {
       "description": "Traceability of the record origin (RS 234-2006).",
       "type": "object",

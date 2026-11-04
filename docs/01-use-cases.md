@@ -55,6 +55,9 @@ flowchart LR
         UC24[UC-24 Public document lookup]
         UC25[UC-25 Record purchases and suppliers]
         UC26[UC-26 Export reports to Excel]
+        UC29[UC-29 Generate sales record 14.1]
+        UC30[UC-30 Generate inventory record 12.1]
+        UC31[UC-31 Close book period]
         UCX[Calculate taxes]
         UCY[Sign and submit]
     end
@@ -68,7 +71,7 @@ flowchart LR
     end
 
     V --- UC1 & UC2 & UC5 & UC14 & UC17 & UC18 & UC19 & UC20 & UC27
-    C --- UC3 & UC4 & UC8 & UC9 & UC15 & UC26 & UC22 & UC23 & UC28
+    C --- UC3 & UC4 & UC8 & UC9 & UC15 & UC26 & UC29 & UC30 & UC31 & UC22 & UC23 & UC28
     A --- UC10 & UC11 & UC12 & UC13
     AL --- UC16 & UC25 & UC21
     CF --- UC24
@@ -119,6 +122,9 @@ MoSCoW priority: **M** = Must, **S** = Should, **C** = Could, **W** = Won't (thi
 | UC-26 | Export reports to Excel | Accountant | S | SPEC-001 |
 | UC-27 | Issue a contingency document (when electronic issuance is impossible for reasons beyond the issuer's control) | Salesperson | C | — (phase 2) |
 | UC-28 | Issue a credit/debit note on a paper document or one issued by another system | Accountant | C | — (phase 2) |
+| UC-29 | Generate the sales record, PLE format 14.1 | Accountant | M | SPEC-013 |
+| UC-30 | Generate the permanent inventory in physical units, PLE format 12.1 | Accountant | M | SPEC-013, 010 |
+| UC-31 | Close a book period | Accountant | M | SPEC-013 |
 
 ## 4. Main scenarios (summary)
 
@@ -126,8 +132,8 @@ MoSCoW priority: **M** = Must, **S** = Should, **C** = Could, **W** = Won't (thi
 1. The salesperson enters the customer RUC → the system validates the check digit and queries the registry (UC-05).
 2. Adds line items; the system proposes the IGV affectation / ISC / ICBPER from the product.
 3. The system calculates taxes and totals (SPEC-003) and shows a preview.
-4. The salesperson confirms; the system reserves the sequence number (SPEC-005).
-5. The UBL 2.1 XML is built, signed (SPEC-006) and submitted to the OSE / SUNAT (SPEC-007).
+4. The salesperson confirms; in one short transaction the system assigns the sequence number (SPEC-005), builds and signs the UBL 2.1 XML (SPEC-006) and queues the submission (ADR-004).
+5. A worker submits the document to the OSE / SUNAT (SPEC-007).
 6. The CDR is stored and the status is updated: `ACCEPTED`, `OBSERVED` or `REJECTED`.
 7. Stock is decreased (SPEC-010) and the system offers to email the PDF to the customer (UC-14).
 
@@ -210,6 +216,7 @@ manual [F6], which lists every field the system accepts. Result: **Yes** (confir
 - All **16 points confirmed** with public documentation; none contradicts the catalog. New findings were added as **UC-27** and **UC-28**.
 - Nubefact uses a `codigo_unico` field so that it controls duplicate generation [F6]: the same idea as our `Idempotency-Key` (SPEC-005 R-06).
 - According to its documentation, Nubefact **does not control stock**: inventory integrated with sales (SPEC-010) and the legacy migration (SPEC-009) are ABC-specific needs.
+- Its Excel reports (point 14) are not the formal SUNAT formats, so UC-29 and UC-30 come from the regulations (RS 234-2006), not from Nubefact.
 - **Pending (optional):** a screen-by-screen walkthrough with a Nubefact DEMO account. It requires a RUC, which is not available; the instructor stated it is optional.
 
 ## 8. References

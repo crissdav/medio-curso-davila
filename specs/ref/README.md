@@ -8,6 +8,8 @@ All contracts in this repository follow **UBL 2.1 with the SUNAT (Peru) customiz
 | [20123456786-01-F001-123.xml](20123456786-01-F001-123.xml) | Invoice of the ABC case (groceries with catalog 08 ISC and ICBPER). Equivalent to [invoice-response.json](../schemas/examples/invoice-response.json); every element is annotated with its `T-nn` row of the [matrix](../../docs/05-traceability-matrix.md). |
 | [sunat-factura-minima-ejemplo.xml](sunat-factura-minima-ejemplo.xml) | Minimal third-party SUNAT invoice, copied unchanged from [giansalex (author of Greenter)](https://gist.github.com/giansalex/6cab789ed1d9ee838216c3847862a030). It dates from 2020: it does not include `cac:PaymentTerms` (payment terms), required later. |
 
+The [ple/](ple/) folder holds the book samples for the same invoice: [format 14.1](ple/LE2012345678620261000140100001111.TXT) and [format 12.1](ple/LE2012345678620261000120100001111.TXT) (SPEC-013). They are checked by `npm run validate`.
+
 Both XML files are **unsigned**: the XMLDSig signature is inserted into `ext:ExtensionContent` when signing (SPEC-006).
 
 ## Two-layer validation

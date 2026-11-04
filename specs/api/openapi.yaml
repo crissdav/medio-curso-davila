@@ -10,9 +10,10 @@ info:
 
     Conventions:
     - Amounts as decimal strings (see specs/schemas/common.schema.json).
-    - Errors as `application/problem+json` (RFC 9457).
+    - Errors as `application/problem+json` (RFC 9457). 400 = malformed request; 422 = business rule; a SUNAT
+      rejection is not an error: 201 with status `REJECTED`.
     - Issuing operations require an `Idempotency-Key` header so that a client retry never
-      consumes two sequence numbers (SPEC-005).
+      consumes two sequence numbers (SPEC-005); a repeated key returns 200 with the same document.
 servers:
   - url: https://api.abc-software.pe/api/v1
     description: Monolith (production)
@@ -43,6 +44,8 @@ tags:
     description: UC-24 Public document lookup (no authentication)
   - name: Reports
     description: UC-15 / UC-26 Sales reports
+  - name: Ledgers
+    description: SPEC-013 Electronic books (PLE formats 14.1 and 12.1)
 
 paths:
   /invoices:
@@ -53,7 +56,9 @@ paths:
       description: |
         Use case `IssueInvoiceUseCase`. Validates (SPEC-004), calculates taxes (SPEC-003),
         assigns the sequence number (SPEC-005), builds and signs the XML (SPEC-006) and submits it (SPEC-007).
-        If SUNAT or the OSE does not respond, it returns 202 with status `PENDING_SUBMISSION`.
+        The submission happens outside the numbering transaction (ADR-004); the request waits a few
+        seconds for the CDR. 201 returns the resource with the CDR result, including `REJECTED`.
+        Without a CDR yet it returns 202 with status `SIGNED` or `PENDING_SUBMISSION`.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
@@ -66,8 +71,14 @@ paths:
               groceryInvoice:
                 $ref: '#/components/examples/InvoiceRequest'
       responses:
+        '200':
+          description: Replay of an already used Idempotency-Key; returns the same document without consuming a sequence number.
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/invoice.schema.json#/$defs/Invoice'
         '201':
-          description: Document issued with its CDR (ACCEPTED or OBSERVED).
+          description: Document created with its CDR result (ACCEPTED, OBSERVED or REJECTED; the sequence number stays consumed).
           headers:
             Location:
               schema: { type: string }
@@ -79,14 +90,18 @@ paths:
                 acceptedInvoice:
                   $ref: '#/components/examples/InvoiceResponse'
         '202':
-          description: Document signed; submission pending (SUNAT or OSE unavailable).
+          description: Document created and signed; no CDR yet (status SIGNED or PENDING_SUBMISSION).
           content:
             application/json:
               schema:
                 $ref: '../schemas/invoice.schema.json#/$defs/Invoice'
         '400': { $ref: '#/components/responses/ValidationError' }
         '409': { $ref: '#/components/responses/Conflict' }
-        '422': { $ref: '#/components/responses/SunatRejection' }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
     get:
       tags: [Invoices]
       operationId: listInvoices
@@ -114,6 +129,9 @@ paths:
                   total: { type: integer }
         '400': { $ref: '#/components/responses/ValidationError' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /invoices/{id}:
     get:
@@ -128,6 +146,10 @@ paths:
             application/json:
               schema: { $ref: '../schemas/invoice.schema.json#/$defs/Invoice' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /invoices/{id}/xml:
     get:
@@ -142,6 +164,10 @@ paths:
             application/xml:
               schema: { type: string }
         '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /invoices/{id}/cdr:
     get:
@@ -154,8 +180,12 @@ paths:
           description: CDR.
           content:
             application/zip:
-              schema: { type: string, contentEncoding: base64 }
+              schema: { type: string, format: binary }
         '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /invoices/{id}/pdf:
     get:
@@ -170,8 +200,12 @@ paths:
           description: PDF with QR code and hash.
           content:
             application/pdf:
-              schema: { type: string, contentEncoding: base64 }
+              schema: { type: string, format: binary }
         '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /invoices/{id}/resubmissions:
     post:
@@ -187,6 +221,12 @@ paths:
             application/json:
               schema: { $ref: '../schemas/cdr-response.schema.json' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+        '504': { $ref: '#/components/responses/GatewayTimeout' }
 
   /notes:
     post:
@@ -204,14 +244,28 @@ paths:
               itemReturn:
                 $ref: '#/components/examples/CreditNoteRequest'
       responses:
-        '201':
-          description: Note issued.
+        '200':
+          description: Replay of an already used Idempotency-Key; returns the same note without consuming a sequence number.
           content:
             application/json:
-              schema: { $ref: '../schemas/invoice.schema.json#/$defs/Invoice' }
+              schema: { $ref: '../schemas/note.schema.json#/$defs/IssuedNote' }
+        '201':
+          description: Note created with its CDR result (ACCEPTED, OBSERVED or REJECTED).
+          content:
+            application/json:
+              schema: { $ref: '../schemas/note.schema.json#/$defs/IssuedNote' }
+        '202':
+          description: Note created and signed; no CDR yet.
+          content:
+            application/json:
+              schema: { $ref: '../schemas/note.schema.json#/$defs/IssuedNote' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '422': { $ref: '#/components/responses/SunatRejection' }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /taxes/calculations:
     post:
@@ -245,8 +299,13 @@ paths:
                   items:
                     type: array
                     items: { $ref: '../schemas/line.schema.json#/$defs/CalculatedLine' }
-                  totals: { $ref: '../schemas/invoice.schema.json#/$defs/Totals' }
+                  totals: { $ref: '../schemas/sales-document.schema.json#/$defs/Totals' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /taxpayers/{ruc}:
     get:
@@ -266,6 +325,13 @@ paths:
               schema: { $ref: '#/components/schemas/Taxpayer' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+        '504': { $ref: '#/components/responses/GatewayTimeout' }
 
   /identity-documents/validations:
     post:
@@ -294,6 +360,10 @@ paths:
                   valid: { type: boolean }
                   reason: { type: string }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /series:
     get:
@@ -309,6 +379,9 @@ paths:
                 type: array
                 items: { $ref: '#/components/schemas/Series' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
     post:
       tags: [Series]
       operationId: createSeries
@@ -324,7 +397,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Series' }
+        '400': { $ref: '#/components/responses/ValidationError' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /daily-summaries:
     post:
@@ -348,6 +426,12 @@ paths:
               schema: { $ref: '#/components/schemas/Ticket' }
         '400': { $ref: '#/components/responses/ValidationError' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+        '504': { $ref: '#/components/responses/GatewayTimeout' }
 
   /voided-documents:
     post:
@@ -366,6 +450,13 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Ticket' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+        '504': { $ref: '#/components/responses/GatewayTimeout' }
 
   /tickets/{ticket}:
     get:
@@ -381,6 +472,12 @@ paths:
             application/json:
               schema: { $ref: '../schemas/cdr-response.schema.json' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+        '504': { $ref: '#/components/responses/GatewayTimeout' }
 
   /products:
     get:
@@ -400,6 +497,9 @@ paths:
                 type: array
                 items: { $ref: '../schemas/product.schema.json' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
     post:
       tags: [Inventory]
       operationId: createProduct
@@ -416,6 +516,10 @@ paths:
             application/json:
               schema: { $ref: '../schemas/product.schema.json' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /inventory/movements:
     get:
@@ -436,6 +540,10 @@ paths:
                 type: array
                 items: { $ref: '../schemas/inventory-movement.schema.json' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
     post:
       tags: [Inventory]
       operationId: recordMovement
@@ -448,7 +556,17 @@ paths:
       responses:
         '201':
           description: Recorded.
+          headers:
+            Location:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '../schemas/inventory-movement.schema.json' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /migrations:
     post:
@@ -475,6 +593,10 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/MigrationBatch' }
         '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /migrations/{batch}:
     get:
@@ -490,6 +612,10 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/MigrationBatch' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /migrations/{batch}/issues:
     get:
@@ -514,6 +640,10 @@ paths:
                     message: { type: string }
                     originalData: { $ref: '../schemas/legacy-movement.schema.json' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /public/invoices:
     get:
@@ -551,8 +681,8 @@ paths:
                       pdf: { type: string, format: uri-reference }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '429':
-          description: Too many lookups from the same IP.
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /reports/invoices:
     get:
@@ -569,9 +699,91 @@ paths:
           description: Excel file with the documents issued, accepted, rejected and voided in the period.
           content:
             application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
-              schema: { type: string, contentEncoding: base64 }
+              schema: { type: string, format: binary }
         '400': { $ref: '#/components/responses/ValidationError' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /ledgers/periods/{period}/closure:
+    post:
+      tags: [Ledgers]
+      operationId: closeLedgerPeriod
+      summary: Close a book period so that its PLE files can be generated
+      parameters:
+        - { name: period, in: path, required: true, schema: { $ref: '../schemas/common.schema.json#/$defs/LedgerPeriod' } }
+      responses:
+        '200':
+          description: Period closed (repeating the call returns the same result).
+          content:
+            application/json:
+              schema: { $ref: '../schemas/ledger.schema.json#/$defs/LedgerPeriodStatus' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /ledgers/sales/{period}:
+    get:
+      tags: [Ledgers]
+      operationId: getSalesRecord
+      summary: Sales record, PLE format 14.1 (code 140100)
+      description: Use case `GenerateSalesRecordUseCase`. The TXT follows the name and layout of RS 286-2009/SUNAT.
+      parameters:
+        - { name: period, in: path, required: true, schema: { $ref: '../schemas/common.schema.json#/$defs/LedgerPeriod' } }
+      responses:
+        '200':
+          description: PLE TXT file or its records as JSON, according to the Accept header.
+          headers:
+            Content-Disposition:
+              description: 'attachment; filename="LE{RUC}{YYYYMM}00140100{opportunity}{operations}{content}{currency}1.TXT"'
+              schema: { type: string }
+          content:
+            text/plain:
+              schema: { type: string }
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '../schemas/ledger.schema.json#/$defs/SalesRecordLine' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /ledgers/inventory-units/{period}:
+    get:
+      tags: [Ledgers]
+      operationId: getInventoryUnitsRecord
+      summary: Permanent inventory in physical units, PLE format 12.1 (code 120100)
+      description: Use case `GenerateInventoryRecordUseCase`. Units are exported in table 6 and exits are negative.
+      parameters:
+        - { name: period, in: path, required: true, schema: { $ref: '../schemas/common.schema.json#/$defs/LedgerPeriod' } }
+      responses:
+        '200':
+          description: PLE TXT file or its records as JSON, according to the Accept header.
+          headers:
+            Content-Disposition:
+              description: 'attachment; filename="LE{RUC}{YYYYMM}00120100{opportunity}{operations}{content}{currency}1.TXT"'
+              schema: { type: string }
+          content:
+            text/plain:
+              schema: { type: string }
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '../schemas/ledger.schema.json#/$defs/InventoryRecordLine' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/BusinessRuleViolation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /catalogs/{number}:
     get:
@@ -587,6 +799,10 @@ paths:
             application/json:
               schema: { $ref: '../schemas/catalog.schema.json' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
 components:
   securitySchemes:
@@ -662,12 +878,12 @@ components:
             targetOutboundTotal: { type: string }
   responses:
     Unauthorized:
-      description: Missing or expired token, or missing required role.
+      description: Missing, invalid or expired token.
       content:
         application/problem+json:
           schema: { $ref: '../schemas/error.schema.json' }
     ValidationError:
-      description: Request or business rule validation error.
+      description: Malformed request (fails the JSON Schema or the parameter format).
       content:
         application/problem+json:
           schema: { $ref: '../schemas/error.schema.json' }
@@ -681,8 +897,41 @@ components:
       content:
         application/problem+json:
           schema: { $ref: '../schemas/error.schema.json' }
-    SunatRejection:
-      description: SUNAT or the OSE rejected the document (codes 2000-3999). The sequence number stays consumed.
+    BusinessRuleViolation:
+      description: Well-formed request that breaks a business rule (e.g. INVALID_RUC check digit, ISC_CONFIG_INCOMPLETE, TOTALS_MISMATCH).
+      content:
+        application/problem+json:
+          schema: { $ref: '../schemas/error.schema.json' }
+    Forbidden:
+      description: Valid token without the required role.
+      content:
+        application/problem+json:
+          schema: { $ref: '../schemas/error.schema.json' }
+    TooManyRequests:
+      description: Rate limit exceeded.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema: { type: integer, minimum: 1 }
+      content:
+        application/problem+json:
+          schema: { $ref: '../schemas/error.schema.json' }
+    BadGateway:
+      description: The OSE, SUNAT or the RUC registry returned an invalid response.
+      content:
+        application/problem+json:
+          schema: { $ref: '../schemas/error.schema.json' }
+    ServiceUnavailable:
+      description: Service temporarily unavailable.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema: { type: integer, minimum: 1 }
+      content:
+        application/problem+json:
+          schema: { $ref: '../schemas/error.schema.json' }
+    GatewayTimeout:
+      description: The OSE, SUNAT or the RUC registry did not respond in time.
       content:
         application/problem+json:
           schema: { $ref: '../schemas/error.schema.json' }

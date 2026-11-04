@@ -1,0 +1,20 @@
+{
+  "period": "20261000",
+  "cuo": "01-F001-123",
+  "entryNumber": "M1",
+  "establishmentCode": "0000",
+  "existenceType": "01",
+  "productCode": "CER-620",
+  "sunatProductCode": "5020220100000000",
+  "documentDate": "22/10/2026",
+  "documentType": "01",
+  "series": "F001",
+  "number": "123",
+  "operationType": "01",
+  "description": "Cerveza botella 620 ml",
+  "unitOfMeasure": "07",
+  "entries": "0.00",
+  "exits": "-12.00",
+  "balance": "88.00",
+  "status": "1"
+}

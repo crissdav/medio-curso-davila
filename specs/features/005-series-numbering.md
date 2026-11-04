@@ -14,15 +14,16 @@ sequence numbers.
 | R-01 | Series = 4 alphanumeric characters: `F` + 3 for invoices and their notes; `B` + 3 for sales receipts and their notes. |
 | R-02 | Documents are only issued with series registered and active for that type and establishment → otherwise `SERIES_NOT_AUTHORIZED`. |
 | R-03 | Sequence number from 1 to 99 999 999, unique per (RUC, type, series). When the maximum is reached a new series is required. |
-| R-04 | Atomic assignment (pessimistic lock on the series row) within the issuing transaction. |
+| R-04 | Atomic assignment (lock on the series row) inside the **numbering transaction**, which assigns the number, signs, stores the document as `SIGNED` and writes the outbox row. It lasts milliseconds and makes no network call; the submission runs later (ADR-004). |
 | R-05 | An assigned sequence number is **never** reused, not even if SUNAT rejects the document. |
-| R-06 | A repeated `Idempotency-Key` returns the already created document without assigning a new sequence number. |
+| R-06 | A repeated `Idempotency-Key` returns 200 with the already created document, without assigning a new sequence number. |
 | R-07 | Legacy numbers (`nro_documento`) are **not** loaded as SUNAT sequence numbers (SPEC-009). |
 
 ## Acceptance criteria
 - **AC-1:** Given 50 concurrent issues on F001, then 50 distinct sequence numbers without gaps are assigned.
 - **AC-2:** Given a rejected document with number 10, then the next issue gets 11.
 - **AC-3:** Given series `X001`, then creation returns 400.
+- **AC-4:** Given an OSE that takes 30 seconds to respond, then other issues on the same series are not blocked.
 
 ## Contracts
 - `GET/POST /series` · `Series` in [openapi.yaml](../api/openapi.yaml)

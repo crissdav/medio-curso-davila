@@ -15,9 +15,9 @@ It contains no implementation code.
 | Phase | Result |
 |---|---|
 | **Understand** | Case analysis: the legacy system is a warehouse control (`fecha, ingreso, salida, producto, nro_documento`) without RUC validation, tax calculation, UBL XML or SUNAT/OSE connection. Regulatory basis: RS 097-2012, RS 234-2006, RS 000193-2020 (payment terms), SUNAT catalogs (with emphasis on **catalog 08 — ISC**) and UBL 2.1 with the SUNAT customization. |
-| **Plan** | 12 functional specs derived from each gap in the exam statement, 3 architecture decisions (ADR) and a `docs/` + `specs/` structure. |
-| **Act** | The 4 exam deliverables + use cases (checked against Nubefact), legacy migration, 12 JSON Schemas, 11 catalogs, OpenAPI contract and a sample SUNAT UBL XML invoice. |
-| **Validate** | Automatic script with 456 checks, OpenAPI lint, rendering of the 10 diagrams and two-layer XML validation: structure (official UBL 2.1 XSD) and SUNAT content (catalogs, RUC, arithmetic and cross-check with the JSON). It caught and fixed 2 calculation errors in the invoice example. |
+| **Plan** | 13 functional specs derived from each gap in the exam statement, 4 architecture decisions (ADR) and a `docs/` + `specs/` structure. |
+| **Act** | The 4 exam deliverables + use cases (checked against Nubefact), legacy migration, formal books 14.1 and 12.1, 14 JSON Schemas, 11 catalogs, 5 PLE tables, OpenAPI contract and sample SUNAT UBL XML and PLE files. |
+| **Validate** | Automatic script with 935 checks, OpenAPI lint, rendering of the 10 diagrams and two-layer XML validation: structure (official UBL 2.1 XSD) and SUNAT content (catalogs, RUC, arithmetic and cross-check with the JSON). It caught and fixed 2 calculation errors in the invoice example. |
 
 **Key decisions**
 
@@ -27,6 +27,8 @@ It contains no implementation code.
   uses beer (fixed amount, 02) and a soft drink (ad valorem, 01).
 - **Legacy:** migrated with a hash per row for traceability; `nro_documento` never becomes a SUNAT sequence number.
 - **Amounts as decimal strings** to avoid floating-point rounding errors.
+- **Formal books:** formats 14.1 and 12.1 are generated from the domain through `PleExporterPort`, with SIRE as a second adapter; PLE tables are separate from the XML catalogs.
+- **Two transactions and an outbox:** the series lock lasts milliseconds and never waits for the OSE.
 - **Recommended stack:** Kotlin Multiplatform (MSI + APK) and Spring Boot; digital signing on the server only.
 
 ## 2. Exam deliverables
@@ -36,7 +38,7 @@ It contains no implementation code.
 | 1. Domain Model and Contracts (DTOs / Schemas) | [docs/02-domain-model.md](docs/02-domain-model.md) · [specs/schemas/](specs/schemas/) · [specs/catalogs/](specs/catalogs/) |
 | 2. MVC Architecture Diagrams with a Hexagonal outlook | [docs/03-architecture.md](docs/03-architecture.md) · [docs/adr/](docs/adr/) |
 | 3. Endpoint / Service Specification | [docs/04-api-contracts.md](docs/04-api-contracts.md) · [specs/api/openapi.yaml](specs/api/openapi.yaml) |
-| 4. Regulatory Traceability Matrix SUNAT ↔ UBL | [docs/05-traceability-matrix.md](docs/05-traceability-matrix.md) |
+| 4. Regulatory Traceability Matrix SUNAT ↔ UBL, with formats 14.1 and 12.1 | [docs/05-traceability-matrix.md](docs/05-traceability-matrix.md) · [specs/ple-tables/](specs/ple-tables/) |
 
 Supporting material: [context and regulations](docs/00-context.md) · [use cases](docs/01-use-cases.md) ·
 [legacy migration](docs/06-legacy-migration.md) · [UBL reference](specs/ref/README.md).
@@ -57,16 +59,18 @@ Supporting material: [context and regulations](docs/00-context.md) · [use cases
 | [SPEC-010](specs/features/010-inventory.md) | Inventory integrated with sales |
 | [SPEC-011](specs/features/011-sunat-catalogs.md) | SUNAT catalogs |
 | [SPEC-012](specs/features/012-multiplatform-distribution.md) | MSI / APK distribution |
+| [SPEC-013](specs/features/013-electronic-books-ple.md) | Electronic books (PLE): formats 14.1 and 12.1 |
 
 ADR: [001 Stack](docs/adr/001-multiplatform-stack.md) ·
 [002 MVC monolith with ports](docs/adr/002-mvc-monolith-with-ports.md) ·
-[003 Server-side signing](docs/adr/003-server-side-signing.md).
+[003 Server-side signing](docs/adr/003-server-side-signing.md) ·
+[004 Transactions and outbox](docs/adr/004-transactions-and-outbox.md).
 
 ## 4. Validation
 
 ```bash
 npm install
-npm run validate        # schemas, examples, SPEC-003 arithmetic, matrix, links, SUNAT XML content and OpenAPI lint
+npm run validate        # schemas, examples, SPEC-003 arithmetic, matrix, PLE books, API responses, links, SUNAT XML content and OpenAPI lint
 npm run check:mermaid   # renders the diagrams (uses an installed Chrome/Edge or CHROME_PATH)
 npm run check:xsd       # STRUCTURE layer: XML against the official OASIS UBL 2.1 XSD (requires JDK 11+)
 npm run check:sunat     # CONTENT layer: SUNAT codes, RUC, arithmetic and XML ↔ JSON cross-check (included in validate)

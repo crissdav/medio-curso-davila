@@ -2,25 +2,33 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://abc-software.pe/specs/schemas/inventory-movement.schema.json",
   "title": "InventoryMovementDTO",
-  "description": "Warehouse movement in the new system. Target of the migration (SPEC-009) and generated automatically when documents are issued (SPEC-010).",
+  "description": "Warehouse movement in the new system. Target of the migration (SPEC-009), generated automatically when documents are issued (SPEC-010) and source of format 12.1 (SPEC-013).",
   "type": "object",
-  "required": ["id", "date", "type", "productCode", "quantity", "documentReference", "origin"],
+  "required": ["id", "date", "type", "establishmentCode", "productCode", "existenceType", "unitOfMeasure", "operationType", "quantity", "sourceDocument", "balanceAfter", "origin"],
   "properties": {
     "id": { "type": "string", "format": "uuid" },
     "date": { "$ref": "common.schema.json#/$defs/Date" },
     "type": { "type": "string", "enum": ["INBOUND", "OUTBOUND", "ADJUSTMENT"] },
+    "establishmentCode": { "$ref": "common.schema.json#/$defs/EstablishmentCode" },
     "productCode": { "type": "string", "pattern": "^[A-Z0-9-]{1,30}$" },
+    "existenceType": { "$ref": "common.schema.json#/$defs/ExistenceType" },
+    "unitOfMeasure": { "$ref": "common.schema.json#/$defs/UnitOfMeasure", "description": "Catalog 03 unit of the movement; exported to table 6 through the UnitMappingCatalog." },
+    "operationType": { "$ref": "common.schema.json#/$defs/InventoryOperationType" },
     "quantity": { "$ref": "common.schema.json#/$defs/Quantity" },
-    "documentReference": {
+    "sourceDocument": {
+      "description": "Transfer document, payment document, internal document or similar that supports the movement.",
       "type": "object",
-      "required": ["type", "number"],
+      "required": ["kind", "documentType", "series", "number"],
       "properties": {
-        "type": { "type": "string", "enum": ["LEGACY_INTERNAL", "INVOICE", "DISPATCH_GUIDE", "ADJUSTMENT"] },
-        "number": { "type": "string", "maxLength": 30 },
+        "kind": { "type": "string", "enum": ["LEGACY_INTERNAL", "INVOICE", "DISPATCH_GUIDE", "ADJUSTMENT"] },
+        "documentType": { "$ref": "common.schema.json#/$defs/PleDocumentType" },
+        "series": { "type": "string", "maxLength": 20, "description": "'0' if the document has no series (format 12.1 field 12)." },
+        "number": { "type": "string", "maxLength": 20, "description": "'0' if the document has no number (format 12.1 field 13)." },
         "invoiceId": { "type": "string", "format": "uuid" }
       },
       "additionalProperties": false
     },
+    "balanceAfter": { "$ref": "common.schema.json#/$defs/SignedQuantity", "description": "Product balance per establishment after this movement. May be negative for migrated history (see docs/06-legacy-migration.md)." },
     "origin": { "$ref": "common.schema.json#/$defs/DataOrigin" }
   },
   "additionalProperties": false

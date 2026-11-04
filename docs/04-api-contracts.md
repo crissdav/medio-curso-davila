@@ -11,7 +11,8 @@
 | Format | UTF-8 JSON; amounts as decimal strings |
 | Authentication | Bearer JWT (roles: SALES, ACCOUNTANT, ADMIN, WAREHOUSE) |
 | Idempotency | `Idempotency-Key` mandatory on issuing operations (a retry never consumes two sequence numbers) |
-| Errors | `application/problem+json` with a business `code` or `SUNAT-nnnn` |
+| Errors | `application/problem+json` with a business `code` |
+| Status codes | See section 6 |
 | Pagination | `page`, `pageSize` (max. 200) |
 
 ## 2. Endpoints (MVC input adapters → input ports)
@@ -41,6 +42,9 @@
 | `GET /catalogs/{number}` | `FindCatalogQuery` | all | 011 |
 | `GET /public/invoices` | `LookupPublicInvoiceQuery` (UC-24) | public, no token | 001 |
 | `GET /reports/invoices` | `ExportReportQuery` (UC-15, UC-26) | ACCOUNTANT | 001 |
+| `POST /ledgers/periods/{period}/closure` | `CloseLedgerPeriodUseCase` (UC-31) | ACCOUNTANT | 013 |
+| `GET /ledgers/sales/{period}` | `GenerateSalesRecordUseCase` (UC-29) | ACCOUNTANT | 013 |
+| `GET /ledgers/inventory-units/{period}` | `GenerateInventoryRecordUseCase` (UC-30) | ACCOUNTANT | 013 |
 
 ## 3. Output ports (internal service contracts)
 
@@ -83,6 +87,17 @@ interface SunatSubmissionPort {   // implementations: SunatAdapter, OseAdapter
     fun getTicketStatus(ticket: Ticket): Cdr       // getStatus
 }
 
+interface OutboxPort {   // ADR-004: written in the numbering transaction, read by the worker
+    fun enqueue(message: OutboxMessage)
+    fun nextBatch(limit: Int): List<OutboxMessage>   // FOR UPDATE SKIP LOCKED
+    fun markDone(id: UUID)
+}
+
+interface PleExporterPort {   // implementations: PleTxtAdapter, SireExporterAdapter (RVIE)
+    fun exportSalesRecord(period: LedgerPeriod, lines: List<SalesRecordLine>): LedgerFile
+    fun exportInventoryRecord(period: LedgerPeriod, lines: List<InventoryRecordLine>): LedgerFile
+}
+
 interface FileStoragePort {
     fun save(path: String, content: ByteArray)
     fun read(path: String): ByteArray
@@ -113,13 +128,35 @@ Submitted file: `{RUC}-{TYPE}-{SERIES}-{NUMBER}.zip` containing the XML with the
 
 | Code | HTTP | Rule |
 |---|---|---|
-| `INVALID_RUC` | 400 | SPEC-004 R-01 (modulus 11) |
-| `CUSTOMER_NOT_LOCATED` | 400 / warning | SPEC-004 R-03 |
-| `CUSTOMER_REQUIRED_FOR_RECEIPT` | 400 | SPEC-001 R-04 (S/ 700 threshold) |
-| `SERIES_NOT_AUTHORIZED` | 400 | SPEC-005 R-02 |
-| `SERIES_MISMATCH` | 400 | SPEC-002 R-02 |
-| `ISC_CONFIG_INCOMPLETE` | 400 | SPEC-003 R-05 |
-| `TOTALS_MISMATCH` | 400 | SPEC-003 R-09 |
+| `INVALID_RUC` | 400 format / 422 check digit | SPEC-004 R-01 (modulus 11) |
+| `CUSTOMER_NOT_LOCATED` | 422 / warning | SPEC-004 R-03 |
+| `CUSTOMER_REQUIRED_FOR_RECEIPT` | 422 | SPEC-001 R-04 (S/ 700 threshold) |
+| `SERIES_NOT_AUTHORIZED` | 422 | SPEC-005 R-02 |
+| `SERIES_MISMATCH` | 422 | SPEC-002 R-02 |
+| `ISC_CONFIG_INCOMPLETE` | 422 | SPEC-003 R-05 |
+| `TOTALS_MISMATCH` | 422 | SPEC-003 R-09 |
 | `DOCUMENT_IMMUTABLE` | 409 | INV-06 |
 | `SUBMISSION_IN_PROGRESS` | 409 | SPEC-007 R-04 |
-| `SUNAT-nnnn` | 422 | SUNAT/OSE rejection (2000-3999) |
+| `PERIOD_NOT_CLOSED` | 409 | SPEC-013 R-18 |
+| `PERIOD_HAS_PENDING_DOCUMENTS` | 422 | SPEC-013 R-18 |
+| `PRODUCT_REVIEW_PENDING` | 422 | SPEC-013 R-12 |
+
+A SUNAT rejection is not an API error: the document exists and its number is consumed, so the response is 201 with status `REJECTED` and the code in `cdr.responseCode`.
+
+## 6. HTTP status codes
+
+| Code | When |
+|---|---|
+| 200 | Read, or a repeated `Idempotency-Key` (returns the same document) |
+| 201 | Document created, with its CDR result: `ACCEPTED`, `OBSERVED` or `REJECTED` |
+| 202 | Document created and signed, no CDR yet (`SIGNED` or `PENDING_SUBMISSION`); also summaries and voiding (ticket) |
+| 400 | Malformed request: fails the JSON Schema or the parameter format |
+| 401 / 403 | Missing or invalid token / valid token without the required role (declared on every protected operation) |
+| 404 | Resource not found |
+| 409 | State conflict: duplicate series, submission in progress, period not closed |
+| 422 | Well-formed request that breaks a business rule |
+| 429 | Rate limit exceeded, with `Retry-After` |
+| 502 / 504 | Synchronous call to the OSE, SUNAT or the RUC registry failed / timed out |
+| 503 | Service temporarily unavailable, with `Retry-After` |
+
+Binary files (ZIP, PDF, XLSX) are declared as `format: binary`.

@@ -16,11 +16,23 @@
         "description": { "type": "string", "minLength": 1, "maxLength": 500 },
         "quantity": { "$ref": "common.schema.json#/$defs/Quantity" },
         "unitOfMeasure": { "$ref": "common.schema.json#/$defs/UnitOfMeasure" },
-        "unitValue": { "$ref": "common.schema.json#/$defs/UnitAmount", "description": "Before taxes. For free-of-charge operations it is the reference value." },
+        "unitValue": { "$ref": "common.schema.json#/$defs/UnitAmount", "description": "Before taxes. Must be 0 for free-of-charge operations (UBL cac:Price/cbc:PriceAmount = 0)." },
+        "referenceUnitValue": { "$ref": "common.schema.json#/$defs/UnitAmount", "description": "Input for free-of-charge operations only: reference unit value, returned as unitPrice with catalog 16 code 02." },
         "igvAffectation": { "$ref": "common.schema.json#/$defs/IgvAffectation" },
         "discount": { "$ref": "common.schema.json#/$defs/Amount", "description": "Discount that reduces the line taxable base." },
         "isc": { "$ref": "product.schema.json#/$defs/IscConfig" },
         "icbperBagCount": { "type": "integer", "minimum": 1, "description": "Only if the item is a plastic bag." }
+      },
+      "if": {
+        "required": ["igvAffectation"],
+        "properties": { "igvAffectation": { "enum": ["11", "12", "13", "14", "15", "16", "21", "31", "32", "33", "34", "35", "36", "37"] } }
+      },
+      "then": {
+        "required": ["referenceUnitValue"],
+        "properties": { "unitValue": { "pattern": "^0+(\\.0+)?$" } }
+      },
+      "else": {
+        "not": { "required": ["referenceUnitValue"] }
       }
     },
     "CalculatedLine": {
@@ -32,10 +44,10 @@
           "required": ["lineNumber", "unitPrice", "saleValue", "igvBase", "igv", "totalTaxes"],
           "properties": {
             "lineNumber": { "type": "integer", "minimum": 1 },
-            "unitPrice": { "$ref": "common.schema.json#/$defs/UnitAmount", "description": "Taxes included (catalog 16 code 01) or reference value (code 02)." },
-            "saleValue": { "$ref": "common.schema.json#/$defs/Amount", "description": "quantity × unitValue − discount" },
+            "unitPrice": { "$ref": "common.schema.json#/$defs/UnitAmount", "description": "UBL PricingReference: price with taxes (catalog 16 code 01) or, for free-of-charge operations, the reference value (code 02)." },
+            "saleValue": { "$ref": "common.schema.json#/$defs/Amount", "description": "quantity × unitValue − discount; for free-of-charge operations, quantity × referenceUnitValue." },
             "iscBase": { "$ref": "common.schema.json#/$defs/Amount" },
-            "iscAmount": { "$ref": "common.schema.json#/$defs/Amount", "description": "Calculated according to catalog 08." },
+            "iscAmount": { "$ref": "common.schema.json#/$defs/Amount", "description": "Calculated according to catalog 08 (SPEC-003 R-02)." },
             "igvBase": { "$ref": "common.schema.json#/$defs/Amount", "description": "saleValue + iscAmount" },
             "igvRate": { "$ref": "common.schema.json#/$defs/Rate" },
             "igv": { "$ref": "common.schema.json#/$defs/Amount" },

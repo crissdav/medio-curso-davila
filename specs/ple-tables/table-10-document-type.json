@@ -1,0 +1,14 @@
+{
+  "number": "10",
+  "name": "PLE table 10 — Payment or other document type (subset used by ABC)",
+  "source": "RS 234-2006/SUNAT, Annex (Table 10)",
+  "codes": [
+    { "code": "00", "description": "Other (specify)", "officialName": "Otros (especificar)" },
+    { "code": "01", "description": "Invoice", "officialName": "Factura" },
+    { "code": "03", "description": "Sales receipt", "officialName": "Boleta de Venta" },
+    { "code": "07", "description": "Credit note", "officialName": "Nota de crédito" },
+    { "code": "08", "description": "Debit note", "officialName": "Nota de débito" },
+    { "code": "09", "description": "Dispatch guide (sender)", "officialName": "Guía de remisión - Remitente" },
+    { "code": "12", "description": "Cash-register ticket", "officialName": "Ticket o cinta emitido por máquina registradora" }
+  ]
+}

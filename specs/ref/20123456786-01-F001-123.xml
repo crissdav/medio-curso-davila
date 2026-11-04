@@ -23,7 +23,7 @@
   <!-- T-08 document type (catalog 01) · T-09 operation type (catalog 51) -->
   <cbc:InvoiceTypeCode listID="0101" listAgencyName="PE:SUNAT" listName="Tipo de Documento"
                        listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01">01</cbc:InvoiceTypeCode>
-  <cbc:Note languageLocaleID="1000">TRESCIENTOS SETENTA Y SIETE CON 81/100 SOLES</cbc:Note> <!-- T-10 -->
+  <cbc:Note languageLocaleID="1000">TRESCIENTOS SETENTA Y SIETE CON 67/100 SOLES</cbc:Note> <!-- T-10 -->
   <cbc:DocumentCurrencyCode listID="ISO 4217 Alpha"
                             listAgencyName="United Nations Economic Commission for Europe">PEN</cbc:DocumentCurrencyCode> <!-- T-11 -->
 
@@ -79,17 +79,17 @@
   </cac:PaymentTerms>
 
   <cac:TaxTotal>
-    <cbc:TaxAmount currencyID="PEN">81.64</cbc:TaxAmount>                   <!-- T-23 -->
+    <cbc:TaxAmount currencyID="PEN">81.50</cbc:TaxAmount>                   <!-- T-23 -->
     <cac:TaxSubtotal>                                                        <!-- T-28 ISC -->
       <cbc:TaxableAmount currencyID="PEN">96.00</cbc:TaxableAmount>
-      <cbc:TaxAmount currencyID="PEN">23.16</cbc:TaxAmount>
+      <cbc:TaxAmount currencyID="PEN">23.04</cbc:TaxAmount>
       <cac:TaxCategory>
         <cac:TaxScheme><cbc:ID>2000</cbc:ID><cbc:Name>ISC</cbc:Name><cbc:TaxTypeCode>EXC</cbc:TaxTypeCode></cac:TaxScheme>
       </cac:TaxCategory>
     </cac:TaxSubtotal>
     <cac:TaxSubtotal>                                                        <!-- T-24 IGV -->
       <cbc:TaxableAmount currencyID="PEN">296.17</cbc:TaxableAmount>
-      <cbc:TaxAmount currencyID="PEN">57.48</cbc:TaxAmount>
+      <cbc:TaxAmount currencyID="PEN">57.46</cbc:TaxAmount>
       <cac:TaxCategory>
         <cac:TaxScheme><cbc:ID>1000</cbc:ID><cbc:Name>IGV</cbc:Name><cbc:TaxTypeCode>VAT</cbc:TaxTypeCode></cac:TaxScheme>
       </cac:TaxCategory>
@@ -104,8 +104,8 @@
 
   <cac:LegalMonetaryTotal>
     <cbc:LineExtensionAmount currencyID="PEN">296.17</cbc:LineExtensionAmount> <!-- T-30 -->
-    <cbc:TaxInclusiveAmount currencyID="PEN">377.81</cbc:TaxInclusiveAmount>   <!-- T-31 -->
-    <cbc:PayableAmount currencyID="PEN">377.81</cbc:PayableAmount>             <!-- T-34 -->
+    <cbc:TaxInclusiveAmount currencyID="PEN">377.67</cbc:TaxInclusiveAmount>   <!-- T-31 -->
+    <cbc:PayableAmount currencyID="PEN">377.67</cbc:PayableAmount>             <!-- T-34 -->
   </cac:LegalMonetaryTotal>
 
   <!-- Line 1: rice, taxed (affectation 10) -->
@@ -143,31 +143,31 @@
     <cac:Price><cbc:PriceAmount currencyID="PEN">20.00</cbc:PriceAmount></cac:Price> <!-- T-45 -->
   </cac:InvoiceLine>
 
-  <!-- Line 2: beer, ISC system 02 fixed amount (catalog 08) -->
+  <!-- Line 2: beer, ISC system 02 fixed amount (catalog 08): 12 NIU x 0.62 L x S/ 2.00 per litre -->
   <cac:InvoiceLine>
     <cbc:ID>2</cbc:ID>
     <cbc:InvoicedQuantity unitCode="NIU" unitCodeListID="UN/ECE rec 20">12</cbc:InvoicedQuantity>
     <cbc:LineExtensionAmount currencyID="PEN">48.00</cbc:LineExtensionAmount>
     <cac:PricingReference>
       <cac:AlternativeConditionPrice>
-        <cbc:PriceAmount currencyID="PEN">6.195</cbc:PriceAmount>
+        <cbc:PriceAmount currencyID="PEN">6.1833333333</cbc:PriceAmount>
         <cbc:PriceTypeCode listName="Tipo de Precio" listAgencyName="PE:SUNAT"
                            listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16">01</cbc:PriceTypeCode>
       </cac:AlternativeConditionPrice>
     </cac:PricingReference>
     <cac:TaxTotal>
-      <cbc:TaxAmount currencyID="PEN">26.34</cbc:TaxAmount>
+      <cbc:TaxAmount currencyID="PEN">26.20</cbc:TaxAmount>
       <cac:TaxSubtotal>                                                      <!-- T-51, T-52 ISC -->
         <cbc:TaxableAmount currencyID="PEN">48.00</cbc:TaxableAmount>
-        <cbc:TaxAmount currencyID="PEN">15.00</cbc:TaxAmount>
+        <cbc:TaxAmount currencyID="PEN">14.88</cbc:TaxAmount>
         <cac:TaxCategory>
           <cbc:TierRange>02</cbc:TierRange>
           <cac:TaxScheme><cbc:ID>2000</cbc:ID><cbc:Name>ISC</cbc:Name><cbc:TaxTypeCode>EXC</cbc:TaxTypeCode></cac:TaxScheme>
         </cac:TaxCategory>
       </cac:TaxSubtotal>
       <cac:TaxSubtotal>                                                      <!-- IGV on sale value + ISC -->
-        <cbc:TaxableAmount currencyID="PEN">63.00</cbc:TaxableAmount>
-        <cbc:TaxAmount currencyID="PEN">11.34</cbc:TaxAmount>
+        <cbc:TaxableAmount currencyID="PEN">62.88</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="PEN">11.32</cbc:TaxAmount>
         <cac:TaxCategory>
           <cbc:Percent>18</cbc:Percent>
           <cbc:TaxExemptionReasonCode listAgencyName="PE:SUNAT" listName="Afectacion del IGV"

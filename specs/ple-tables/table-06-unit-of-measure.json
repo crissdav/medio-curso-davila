@@ -1,0 +1,23 @@
+{
+  "number": "06",
+  "name": "PLE table 6 — Unit of measure code (not UN/ECE: requires a mapping from catalog 03)",
+  "source": "RS 234-2006/SUNAT, Annex (Table 6)",
+  "codes": [
+    { "code": "01", "description": "Kilograms", "officialName": "KILOGRAMOS" },
+    { "code": "02", "description": "Pounds", "officialName": "LIBRAS" },
+    { "code": "03", "description": "Long tons", "officialName": "TONELADAS LARGAS" },
+    { "code": "04", "description": "Metric tons", "officialName": "TONELADAS MÉTRICAS" },
+    { "code": "05", "description": "Short tons", "officialName": "TONELADAS CORTAS" },
+    { "code": "06", "description": "Grams", "officialName": "GRAMOS" },
+    { "code": "07", "description": "Units", "officialName": "UNIDADES" },
+    { "code": "08", "description": "Litres", "officialName": "LITROS" },
+    { "code": "09", "description": "Gallons", "officialName": "GALONES" },
+    { "code": "10", "description": "Barrels", "officialName": "BARRILES" },
+    { "code": "11", "description": "Cans", "officialName": "LATAS" },
+    { "code": "12", "description": "Boxes", "officialName": "CAJAS" },
+    { "code": "13", "description": "Thousands", "officialName": "MILLARES" },
+    { "code": "14", "description": "Cubic metres", "officialName": "METROS CÚBICOS" },
+    { "code": "15", "description": "Metres", "officialName": "METROS" },
+    { "code": "99", "description": "Other (specify)", "officialName": "OTROS (ESPECIFICAR)" }
+  ]
+}

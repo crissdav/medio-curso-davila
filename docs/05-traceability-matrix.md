@@ -78,8 +78,8 @@ Regulatory source: RS N.° 000193-2020/SUNAT, Annex IV (Annex 9-A, data items 17
 | T-41 | Quantity and unit of measure | `cat-03:NIU`, `cat-03:ZZ` | `cac:InvoiceLine/cbc:InvoicedQuantity` | `unitCode`, `unitCodeListID="UN/ECE rec 20"` | `Invoice.items[].quantity`, `Invoice.items[].unitOfMeasure` | 001 |
 | T-42 | Line sale value | — | `cac:InvoiceLine/cbc:LineExtensionAmount` | `currencyID` | `Invoice.items[].saleValue` | 003 |
 | T-43 | Unit sale price | `cat-16:01` | `cac:InvoiceLine/cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceAmount` + `cbc:PriceTypeCode` | `listName="Tipo de Precio"`, `listURI=…catalogo16` | `Invoice.items[].unitPrice` | 003 |
-| T-44 | Reference value (free of charge) | `cat-16:02` | `cac:InvoiceLine/cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceAmount` + `cbc:PriceTypeCode` | `PriceTypeCode=02` | `Invoice.items[].unitValue` | 003 |
-| T-45 | Unit value (before taxes) | — | `cac:InvoiceLine/cac:Price/cbc:PriceAmount` | `currencyID`; 0 for free-of-charge items | `Invoice.items[].unitValue` | 003 |
+| T-44 | Reference value (free of charge) | `cat-16:02` | `cac:InvoiceLine/cac:PricingReference/cac:AlternativeConditionPrice/cbc:PriceAmount` + `cbc:PriceTypeCode` | `PriceTypeCode=02` | `Invoice.items[].unitPrice` | 003 |
+| T-45 | Unit value (before taxes) | — | `cac:InvoiceLine/cac:Price/cbc:PriceAmount` | `currencyID`; always 0 for free-of-charge items | `Invoice.items[].unitValue` | 003 |
 | T-46 | Description | — | `cac:InvoiceLine/cac:Item/cbc:Description` | max. 500 | `Invoice.items[].description` | 001 |
 | T-47 | Seller's product code | — | `cac:InvoiceLine/cac:Item/cac:SellersItemIdentification/cbc:ID` | — | `Invoice.items[].productCode` | 010 |
 | T-48 | SUNAT product code | — (catalog 25, UNSPSC) | `cac:InvoiceLine/cac:Item/cac:CommodityClassification/cbc:ItemClassificationCode` | `listID="UNSPSC"`, `listAgencyName="GS1 US"` | `Product.sunatProductCode` | 010 |
@@ -101,7 +101,7 @@ Regulatory source: RS N.° 000193-2020/SUNAT, Annex IV (Annex 9-A, data items 17
 | T-63 | Affected document type | `cat-01:01`, `cat-01:03` | `cac:BillingReference/cac:InvoiceDocumentReference/cbc:DocumentTypeCode` | `listURI=…catalogo01` | `Note.affectedDocument.documentType` | 002 |
 | T-64 | Note quantity | `cat-03:NIU` | `cac:CreditNoteLine/cbc:CreditedQuantity` or `cac:DebitNoteLine/cbc:DebitedQuantity` | `unitCode` | `Note.items[].quantity` | 002 |
 | T-65 | Note document type | `cat-01:07`, `cat-01:08` | `CreditNote` or `DebitNote` root | — | `Note.documentType` | 002 |
-| T-66 | Total amount (debit note) | — | `cac:RequestedMonetaryTotal/cbc:PayableAmount` | Replaces `LegalMonetaryTotal` in `DebitNote` | `Invoice.totals.payableAmount` | 002 |
+| T-66 | Total amount (debit note) | — | `cac:RequestedMonetaryTotal/cbc:PayableAmount` | Replaces `LegalMonetaryTotal` in `DebitNote` | `IssuedNote.totals.payableAmount` | 002 |
 
 ## 7. Response (CDR — `ApplicationResponse` root)
 
@@ -115,11 +115,11 @@ Regulatory source: RS N.° 000193-2020/SUNAT, Annex IV (Annex 9-A, data items 17
 
 | ID | Legacy field | Target in the new model | Does it reach a UBL element? | Rule |
 |---|---|---|---|---|
-| L-01 | `fecha` | `InventoryMovement.date` | No (warehouse history, not an electronic document) | SPEC-009 M-02 |
-| L-02 | `ingreso` | `InventoryMovement.quantity` (type INBOUND) | No | SPEC-009 M-03 |
-| L-03 | `salida` | `InventoryMovement.quantity` (type OUTBOUND) | No | SPEC-009 M-03 |
-| L-04 | `producto` | `Product.description` → in new sales: `cac:Item/cbc:Description` (T-46) | **Yes, indirectly** (the migrated product is used in new sales) | SPEC-009 M-04 |
-| L-05 | `nro_documento` | `InventoryMovement.documentReference.number` | **No**: it never becomes `cbc:ID` (T-05) | SPEC-009 M-05 · SPEC-005 R-07 |
+| L-01 | `fecha` | `InventoryMovement.date` → K-10 | No (warehouse history, not an electronic document) | SPEC-009 M-02 |
+| L-02 | `ingreso` | `InventoryMovement.quantity` (type INBOUND) → K-17 | No | SPEC-009 M-03 |
+| L-03 | `salida` | `InventoryMovement.quantity` (type OUTBOUND) → K-18 | No | SPEC-009 M-03 |
+| L-04 | `producto` | `Product.description` → K-15 and, in new sales, `cac:Item/cbc:Description` (T-46) | **Yes, indirectly** (the migrated product is used in new sales) | SPEC-009 M-04 |
+| L-05 | `nro_documento` | `InventoryMovement.sourceDocument.number` → K-13 | **No**: it never becomes `cbc:ID` (T-05) | SPEC-009 M-05 · SPEC-005 R-07 |
 
 ## 9. Differences between generic UBL 2.1 (OASIS) and the SUNAT customization (Peru)
 
@@ -142,6 +142,79 @@ Complete Peruvian sample annotated with these rows: [20123456786-01-F001-123.xml
 
 | Contract | Fields with a UBL counterpart | Fields without a counterpart (justified) |
 |---|---|---|
-| `Invoice` | See T-01 … T-55 | `id`, `status`, `links` (internal use); `sequenceNumber`, `series` (included in `number`, T-05); `cdr` (see T-70 … T-72); `customer.ubigeo`, `customer.email` (sending to the customer); `items[].isc.fixedAmount`, `items[].isc.retailPrice` (calculation parameters: reflected in the T-52 amount); `totals.exportTotal` (phase 2, tax 9995) |
+| `Invoice` | See T-01 … T-55 | `id`, `status`, `links` (internal use); `sequenceNumber`, `series` (included in `number`, T-05); `cdr` (see T-70 … T-72); `customer.ubigeo`, `customer.email` (sending to the customer); `items[].isc.fixedAmount`, `items[].isc.unitConversionFactor`, `items[].isc.retailPrice` (calculation parameters: reflected in the T-52 amount); `items[].referenceUnitValue` (input, returned as `unitPrice`, T-44); `exchangeRate` (not in the XML; feeds V-27); `totals.exportTotal` (phase 2, tax 9995) |
 | `Note` | T-60 … T-66 | `series`, `issueDate` and `currency` follow the same rows as in `Invoice` (T-05, T-06, T-11) |
 | `Cdr` | T-70 … T-72 | `result` (derived), `channel`, `ticket`, `receivedAt` |
+
+## 11. Format 14.1 — Sales and income record (PLE code 140100)
+
+Regulatory source: Annex 2 of RS 286-2009/SUNAT, in the layout of RS 361-2015/SUNAT and RS 108-2020/SUNAT
+(35 fields, with ICBPER in field 23). Fields 36–70 are free-use and are not generated. The row number
+equals the PLE field number. The sample record is [LE2012345678620261000140100001111.TXT](../specs/ref/ple/LE2012345678620261000140100001111.TXT).
+
+| ID | PLE field | PLE table | Origin (UBL / domain) | DTO field | Rule |
+|---|---|---|---|---|---|
+| V-01 | Period | — | Issue date → `YYYYMM00` | `SalesRecordLine.period` | SPEC-013 R-01 |
+| V-02 | Unique operation code (CUO) | — | Derived: `{type}-{series}-{number}` | `SalesRecordLine.cuo` | SPEC-013 R-02 |
+| V-03 | Entry number (A/M/C + sequence) | — | Book sequence for the period | `SalesRecordLine.entryNumber` | SPEC-013 R-02 |
+| V-04 | Document issue date | — | `cbc:IssueDate` (T-06) | `SalesRecordLine.issueDate` | SPEC-013 R-03 |
+| V-05 | Due or payment date | — | Mandatory only for table 10 code 14; not used by ABC | `SalesRecordLine.dueDate` | SPEC-013 R-03 |
+| V-06 | Document type | `table-10:01`, `table-10:03`, `table-10:07`, `table-10:08` | `cbc:InvoiceTypeCode` (T-08) or UBL root (T-65) | `SalesRecordLine.documentType` | SPEC-013 R-04 |
+| V-07 | Series | — | First part of `cbc:ID` (T-05) | `SalesRecordLine.series` | SPEC-005 R-01 |
+| V-08 | Number | — | Second part of `cbc:ID` (T-05) | `SalesRecordLine.number` | SPEC-005 R-03 |
+| V-09 | Final number of a consolidated range | — | Sales receipts consolidated per day | `SalesRecordLine.finalNumber` | SPEC-013 R-05 |
+| V-10 | Customer document type | `table-02:6`, `table-02:1` | `…/cbc:ID/@schemeID` (T-16) through the catalog 06 → table 2 mapping | `SalesRecordLine.customerDocumentType` | SPEC-013 R-05 |
+| V-11 | Customer document number | — | `cac:AccountingCustomerParty/…/cbc:ID` (T-17) | `SalesRecordLine.customerDocumentNumber` | SPEC-013 R-05 |
+| V-12 | Customer name or legal name | — | `…/cbc:RegistrationName` (T-18) | `SalesRecordLine.customerName` | SPEC-013 R-05 |
+| V-13 | Export invoiced value | — | TaxScheme 9995 (phase 2); `0.00` in phase 1 | `SalesRecordLine.exportValue` | SPEC-013 R-06 |
+| V-14 | Taxed base (excludes ISC) | — | `cac:TaxSubtotal/cbc:TaxableAmount`, TaxScheme 1000 (T-24); `totals.taxedTotal` | `SalesRecordLine.taxableBase` | SPEC-013 R-06 |
+| V-15 | Discount on the taxed base | — | Credit notes type 04 / 05 (T-60) | `SalesRecordLine.taxableBaseDiscount` | SPEC-013 R-07 |
+| V-16 | IGV and/or IPM | — | `cac:TaxSubtotal/cbc:TaxAmount`, TaxScheme 1000 (T-24); `totals.igvTotal` | `SalesRecordLine.igv` | SPEC-013 R-06 |
+| V-17 | Discount on the IGV | — | Credit notes type 04 / 05 (T-60) | `SalesRecordLine.igvDiscount` | SPEC-013 R-07 |
+| V-18 | Total exempt amount | — | TaxScheme 9997 (T-25); `totals.exemptTotal` | `SalesRecordLine.exemptAmount` | SPEC-013 R-06 |
+| V-19 | Total unaffected amount | — | TaxScheme 9998 (T-26); `totals.unaffectedTotal` | `SalesRecordLine.unaffectedAmount` | SPEC-013 R-06 |
+| V-20 | ISC | — | TaxScheme 2000 (T-28); `totals.iscTotal` | `SalesRecordLine.isc` | SPEC-013 R-06 |
+| V-21 | IVAP taxed base | — | Not applicable to ABC (table 10 code 49); empty or `0.00` | (not modelled) | SPEC-013 R-06 |
+| V-22 | IVAP | — | Not applicable to ABC; empty or `0.00` | (not modelled) | SPEC-013 R-06 |
+| V-23 | ICBPER | — | TaxScheme 7152 (T-29); `totals.icbperTotal` | `SalesRecordLine.icbper` | SPEC-013 R-06 |
+| V-24 | Other charges outside the base | — | `cac:LegalMonetaryTotal/cbc:ChargeTotalAmount` | `SalesRecordLine.otherCharges` | SPEC-013 R-06 |
+| V-25 | Document total | — | `cac:LegalMonetaryTotal/cbc:PayableAmount` (T-34) | `SalesRecordLine.total` | SPEC-013 R-06 |
+| V-26 | Currency | — | `cbc:DocumentCurrencyCode` (T-11) | `SalesRecordLine.currency` | SPEC-013 R-08 |
+| V-27 | Exchange rate | — | `Invoice.exchangeRate`; `1.000` in PEN | `SalesRecordLine.exchangeRate` | SPEC-013 R-08 |
+| V-28 | Modified document: issue date | — | Issue date of the affected document (T-62) | `SalesRecordLine.modifiedDocument.issueDate` | SPEC-013 R-07 |
+| V-29 | Modified document: type | `table-10:01`, `table-10:03` | `…/cbc:DocumentTypeCode` (T-63) | `SalesRecordLine.modifiedDocument.documentType` | SPEC-013 R-07 |
+| V-30 | Modified document: series | — | First part of `…/cbc:ID` (T-62) | `SalesRecordLine.modifiedDocument.series` | SPEC-013 R-07 |
+| V-31 | Modified document: number | — | Second part of `…/cbc:ID` (T-62) | `SalesRecordLine.modifiedDocument.number` | SPEC-013 R-07 |
+| V-32 | Collaboration contract ID | — | Not applicable to ABC; empty | (not modelled) | SPEC-013 R-06 |
+| V-33 | Exchange rate inconsistency flag | — | Calculated at export; empty when consistent | (calculated at export) | SPEC-013 R-08 |
+| V-34 | Paid through a payment medium | — | Payment data recorded for the document | `SalesRecordLine.paidWithPaymentMedium` | SPEC-013 R-09 |
+| V-35 | Entry status | — | Derived from `Invoice.status` and the period | `SalesRecordLine.status` | SPEC-013 R-10 |
+
+## 12. Format 12.1 — Permanent inventory in physical units (PLE code 120100)
+
+Regulatory source: Annex 2 of RS 286-2009/SUNAT as amended (structure published with RS 042-2018/SUNAT) and
+the printed format of RS 234-2006/SUNAT, which adds the final balance column. Fields 20–38 are free-use and are
+not generated. The row number equals the PLE field number. The sample record is
+[LE2012345678620261000120100001111.TXT](../specs/ref/ple/LE2012345678620261000120100001111.TXT).
+
+| ID | PLE field | PLE table | Origin (domain) | DTO field | Legacy origin | Rule |
+|---|---|---|---|---|---|---|
+| K-01 | Period | — | `InventoryMovement.date` → `YYYYMM00` | `InventoryRecordLine.period` | `fecha` | SPEC-013 R-01 |
+| K-02 | Unique operation code (CUO) | — | Sale: same CUO as V-02. Other movements: derived from the movement | `InventoryRecordLine.cuo` | `sourceRow` (`LEG-{row}`) | SPEC-013 R-02 |
+| K-03 | Entry number (A/M/C + sequence) | — | Book sequence; `A` for the opening balance | `InventoryRecordLine.entryNumber` | — | SPEC-013 R-02 |
+| K-04 | Annex establishment code | — | `InventoryMovement.establishmentCode` | `InventoryRecordLine.establishmentCode` | Default `0000` (M-10) | SPEC-013 R-11 |
+| K-05 | Catalog of the own code | — | Constant for the own product catalog | (constant) | — | SPEC-013 R-12 |
+| K-06 | Existence type | `table-05:01` | `InventoryMovement.existenceType` | `InventoryRecordLine.existenceType` | Default `01` (M-10) | SPEC-013 R-11 |
+| K-07 | Own product code | — | `InventoryMovement.productCode` | `InventoryRecordLine.productCode` | `producto` (M-04) | SPEC-013 R-11 |
+| K-08 | Catalog of the classification code | — | Constant for UNSPSC | (constant) | — | SPEC-013 R-12 |
+| K-09 | Classification code (16 digits) | — | `Product.sunatProductCode` + `00000000` (T-48) | `InventoryRecordLine.sunatProductCode` | Admin review (M-04) | SPEC-013 R-12 |
+| K-10 | Document date | — | `InventoryMovement.date` | `InventoryRecordLine.documentDate` | `fecha` (M-02) | SPEC-013 R-03 |
+| K-11 | Document type | `table-10:00`, `table-10:01`, `table-10:03`, `table-10:07` | `InventoryMovement.sourceDocument.documentType` | `InventoryRecordLine.documentType` | `00` (M-05) | SPEC-013 R-13 |
+| K-12 | Document series | — | `InventoryMovement.sourceDocument.series` | `InventoryRecordLine.series` | `0` (M-05) | SPEC-013 R-13 |
+| K-13 | Document number | — | `InventoryMovement.sourceDocument.number` | `InventoryRecordLine.number` | `nro_documento` (M-05) | SPEC-013 R-13 |
+| K-14 | Operation type | `table-12:01`, `table-12:02`, `table-12:05`, `table-12:16`, `table-12:99` | `InventoryMovement.operationType` | `InventoryRecordLine.operationType` | `99` (M-11) | SPEC-013 R-13 |
+| K-15 | Existence description | — | `Product.description` (max. 80) | `InventoryRecordLine.description` | `producto` (M-04) | SPEC-013 R-11 |
+| K-16 | Unit of measure | `table-06:07`, `table-06:01`, `table-06:08`, `table-06:12` | `InventoryMovement.unitOfMeasure` through the UnitMappingCatalog | `InventoryRecordLine.unitOfMeasure` | Default `NIU` → `07` (M-04) | SPEC-013 R-14 |
+| K-17 | Entries (the first record is the opening balance) | — | `InventoryMovement.quantity`, type INBOUND × unit factor | `InventoryRecordLine.entries` | `ingreso` (M-03) | SPEC-013 R-15 |
+| K-18 | Exits (negative) | — | `InventoryMovement.quantity`, type OUTBOUND × unit factor × −1 | `InventoryRecordLine.exits` | `salida` (M-03) | SPEC-013 R-15 |
+| K-19 | Operation status | — | `1`, `8` or `9` according to the period | `InventoryRecordLine.status` | — | SPEC-013 R-10 |

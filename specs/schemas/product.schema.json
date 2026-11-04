@@ -11,6 +11,7 @@
     "sunatProductCode": { "type": "string", "pattern": "^[0-9]{8}$", "description": "UNSPSC (catalog 25). UBL: cac:CommodityClassification/cbc:ItemClassificationCode" },
     "unitOfMeasure": { "$ref": "common.schema.json#/$defs/UnitOfMeasure" },
     "igvAffectation": { "$ref": "common.schema.json#/$defs/IgvAffectation" },
+    "existenceType": { "$ref": "common.schema.json#/$defs/ExistenceType", "description": "PLE table 5; format 12.1 field 6. ABC merchandise = 01." },
     "unitValue": { "$ref": "common.schema.json#/$defs/UnitAmount", "description": "Before taxes." },
     "isc": { "$ref": "#/$defs/IscConfig" },
     "icbperApplicable": { "type": "boolean", "default": false, "description": "true if the item is a plastic bag subject to ICBPER." },
@@ -27,7 +28,8 @@
       "properties": {
         "system": { "$ref": "common.schema.json#/$defs/IscSystem" },
         "rate": { "$ref": "common.schema.json#/$defs/Rate" },
-        "fixedAmount": { "$ref": "common.schema.json#/$defs/UnitAmount" },
+        "fixedAmount": { "$ref": "common.schema.json#/$defs/UnitAmount", "description": "System 02: amount per ISC unit (e.g. per litre)." },
+        "unitConversionFactor": { "type": "string", "pattern": "^(?!0+(\\.0+)?$)[0-9]{1,6}(\\.[0-9]{1,6})?$", "default": "1", "description": "System 02: ISC units contained in one sale unit (e.g. 0.62 for a 620 ml bottle taxed per litre and sold in NIU)." },
         "retailPrice": { "$ref": "common.schema.json#/$defs/UnitAmount" }
       },
       "allOf": [

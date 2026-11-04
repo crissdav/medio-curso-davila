@@ -1,0 +1,24 @@
+{
+  "number": "12",
+  "name": "PLE table 12 — Inventory operation type",
+  "source": "RS 234-2006/SUNAT, Annex (Table 12)",
+  "codes": [
+    { "code": "01", "description": "Sale", "officialName": "VENTA" },
+    { "code": "02", "description": "Purchase", "officialName": "COMPRA" },
+    { "code": "03", "description": "Consignment received", "officialName": "CONSIGNACIÓN RECIBIDA" },
+    { "code": "04", "description": "Consignment delivered", "officialName": "CONSIGNACIÓN ENTREGADA" },
+    { "code": "05", "description": "Return received", "officialName": "DEVOLUCIÓN RECIBIDA" },
+    { "code": "06", "description": "Return delivered", "officialName": "DEVOLUCIÓN ENTREGADA" },
+    { "code": "07", "description": "Promotion", "officialName": "PROMOCIÓN" },
+    { "code": "08", "description": "Prize", "officialName": "PREMIO" },
+    { "code": "09", "description": "Donation", "officialName": "DONACIÓN" },
+    { "code": "10", "description": "Issue to production", "officialName": "SALIDA A PRODUCCIÓN" },
+    { "code": "11", "description": "Transfer between warehouses", "officialName": "TRANSFERENCIA ENTRE ALMACENES" },
+    { "code": "12", "description": "Withdrawal", "officialName": "RETIRO" },
+    { "code": "13", "description": "Shrinkage", "officialName": "MERMAS" },
+    { "code": "14", "description": "Spoilage", "officialName": "DESMEDROS" },
+    { "code": "15", "description": "Destruction", "officialName": "DESTRUCCIÓN" },
+    { "code": "16", "description": "Opening balance", "officialName": "SALDO INICIAL" },
+    { "code": "99", "description": "Other (specify)", "officialName": "OTROS (ESPECIFICAR)" }
+  ]
+}

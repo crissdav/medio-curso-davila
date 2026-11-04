@@ -9,13 +9,14 @@ Each context will be a **module** of the monolith and, in the future, a microser
 
 | Context | Responsibility | Aggregates / entities | Specs |
 |---|---|---|---|
-| **Invoicing** | Issue and manage documents | `Invoice`, `InvoiceLine`, `Note`, `Series` | 001, 002, 005 |
+| **Invoicing** | Issue and manage documents | `SalesDocument`, `Invoice`, `Note`, `DocumentLine`, `Series` | 001, 002, 005 |
 | **Taxation** | Calculate IGV / ISC / ICBPER and totals | `TaxCalculator`, `TaxRule`, `TaxParameter` | 003 |
 | **Identity** | Validate and look up customers | `Customer`, `IdentityDocument`, `Taxpayer` | 004 |
 | **SUNAT integration** | UBL XML, signature, submission, CDR, summary, voiding | `ElectronicDocument`, `Submission`, `Cdr`, `Ticket` | 006, 007, 008 |
 | **Inventory** | Products and warehouse movements | `Product`, `InventoryMovement` | 010 |
 | **Migration** | Import the legacy data with traceability | `MigrationBatch`, `MigrationIssue` | 009 |
-| **Catalogs** (shared) | SUNAT codes with effective periods | `Catalog`, `CatalogCode` | 011 |
+| **Ledgers** | Formal books: formats 14.1 and 12.1 | `LedgerPeriod`, `SalesRecordLine`, `InventoryRecordLine` | 013 |
+| **Catalogs** (shared) | SUNAT codes and PLE tables with effective periods | `Catalog`, `CatalogCode`, `UnitMappingCatalog` | 011, 013 |
 
 ## 2. Domain class diagram
 
@@ -23,16 +24,14 @@ Each context will be a **module** of the monolith and, in the future, a microser
 classDiagram
     direction LR
 
-    class Invoice {
-        <<AggregateRoot>>
+    class SalesDocument {
+        <<abstract>>
         +UUID id
         +DocumentType type
         +DocumentNumber number
         +LocalDate issueDate
         +Currency currency
-        +OperationType operationType
         +DocumentStatus status
-        +PaymentTerms paymentTerms
         +Totals totals
         +String documentHash
         +issue()
@@ -40,7 +39,12 @@ classDiagram
         +recordCdr(Cdr)
         +voidDocument()
     }
-    class InvoiceLine {
+    class Invoice {
+        <<AggregateRoot>>
+        +OperationType operationType
+        +PaymentTerms paymentTerms
+    }
+    class DocumentLine {
         <<Entity>>
         +int lineNumber
         +Quantity quantity
@@ -88,6 +92,7 @@ classDiagram
         +String code
         +String description
         +UnitOfMeasure unit
+        +ExistenceType existenceType
         +IgvAffectation affectation
         +IscConfig isc
         +bool icbperApplicable
@@ -98,6 +103,7 @@ classDiagram
         +IscSystem system_cat08
         +Rate rate
         +Money fixedAmount
+        +Decimal unitConversionFactor
         +Money retailPrice
     }
     class Totals {
@@ -120,9 +126,28 @@ classDiagram
     class InventoryMovement {
         <<Entity>>
         +MovementType type
+        +String establishmentCode
+        +ExistenceType existenceType
+        +UnitOfMeasure unit
+        +InventoryOperationType operationType
         +Quantity quantity
-        +DocumentReference reference
+        +SourceDocument sourceDocument
+        +Quantity balanceAfter
         +DataOrigin origin
+    }
+    class LedgerPeriod {
+        <<AggregateRoot>>
+        +YearMonth period
+        +PeriodStatus status
+        +close()
+    }
+    class SalesRecordLine {
+        <<ReadModel>>
+        format 14.1
+    }
+    class InventoryRecordLine {
+        <<ReadModel>>
+        format 12.1
     }
     class DataOrigin {
         <<ValueObject>>
@@ -139,28 +164,33 @@ classDiagram
     }
     class TaxCalculator {
         <<DomainService>>
-        +calculate(List~InvoiceLine~) Totals
+        +calculate(List~DocumentLine~) Totals
     }
 
-    Invoice "1" *-- "1..*" InvoiceLine
-    Invoice --> Customer : buyer
-    Invoice --> Issuer
-    Invoice --> Series : numbered by
-    Invoice *-- Totals
-    Invoice o-- "0..1" Cdr
-    Note --|> Invoice
-    Note --> Invoice : affects
+    SalesDocument <|-- Invoice
+    SalesDocument <|-- Note
+    SalesDocument "1" *-- "1..*" DocumentLine
+    SalesDocument --> Customer : buyer
+    SalesDocument --> Issuer
+    SalesDocument --> Series : numbered by
+    SalesDocument *-- Totals
+    SalesDocument o-- "0..1" Cdr
+    Note --> SalesDocument : affects
     Customer *-- IdentityDocument
-    InvoiceLine --> Product
+    DocumentLine --> Product
     Product *-- IscConfig
-    InvoiceLine *-- IscConfig
+    DocumentLine *-- IscConfig
     Product *-- DataOrigin
     InventoryMovement --> Product
     InventoryMovement *-- DataOrigin
-    InventoryMovement ..> Invoice : outbound by sale
+    InventoryMovement ..> SalesDocument : outbound by sale
     MigrationBatch "1" o-- "*" InventoryMovement
-    TaxCalculator ..> InvoiceLine
+    TaxCalculator ..> DocumentLine
     TaxCalculator ..> Totals
+    SalesRecordLine ..> SalesDocument : derived from
+    InventoryRecordLine ..> InventoryMovement : derived from
+    LedgerPeriod "1" o-- "*" SalesRecordLine
+    LedgerPeriod "1" o-- "*" InventoryRecordLine
 ```
 
 ## 3. Document lifecycle
@@ -196,22 +226,27 @@ stateDiagram-v2
 | INV-08 | ISC ⇒ the product declares its `system` (catalog 08) and the parameter that system requires. | Product / Line |
 | INV-09 | All migrated data keeps its `DataOrigin` with the hash of the original row. | Movement / Product |
 | INV-10 | Amounts are handled as exact decimals (`BigDecimal`), never `double`. | All |
+| INV-11 | A free-of-charge line has `unitValue = 0` and a `referenceUnitValue`, reported as `unitPrice` with catalog 16 code 02. | Line |
+| INV-12 | `balanceAfter` is the previous balance of the product and establishment plus or minus the movement quantity. | Movement |
+| INV-13 | The books of a period are generated only after the period is closed, and a closed period is never changed: corrections go to a later period. | LedgerPeriod |
 
 ## 5. Contract index (DTOs / schemas)
 
 | Contract | File | Usage |
 |---|---|---|
 | Common types (Amount, Ruc, Series, catalog enums) | [common.schema.json](../specs/schemas/common.schema.json) | Reused by all |
-| `IssueInvoiceRequest`, `Invoice`, `Totals`, `PaymentTerms` | [invoice.schema.json](../specs/schemas/invoice.schema.json) | SPEC-001 |
+| `SalesDocument`, `Totals` | [sales-document.schema.json](../specs/schemas/sales-document.schema.json) | SPEC-001, 002 |
+| `IssueInvoiceRequest`, `Invoice`, `PaymentTerms` | [invoice.schema.json](../specs/schemas/invoice.schema.json) | SPEC-001 |
 | `LineRequest`, `CalculatedLine` | [line.schema.json](../specs/schemas/line.schema.json) | SPEC-001, 002, 003 |
-| `NoteDTO` | [note.schema.json](../specs/schemas/note.schema.json) | SPEC-002 |
+| `NoteDTO`, `IssuedNote` | [note.schema.json](../specs/schemas/note.schema.json) | SPEC-002 |
 | `CustomerDTO` | [customer.schema.json](../specs/schemas/customer.schema.json) | SPEC-004 |
 | `CdrResponseDTO` | [cdr-response.schema.json](../specs/schemas/cdr-response.schema.json) | SPEC-007 |
 | `VoidedDocumentsDTO` | [voided-documents.schema.json](../specs/schemas/voided-documents.schema.json) | SPEC-008 |
 | `LegacyMovementDTO` (source) | [legacy-movement.schema.json](../specs/schemas/legacy-movement.schema.json) | SPEC-009 |
 | `InventoryMovementDTO` (target) | [inventory-movement.schema.json](../specs/schemas/inventory-movement.schema.json) | SPEC-009, 010 |
 | `ProductDTO`, `IscConfig` | [product.schema.json](../specs/schemas/product.schema.json) | SPEC-003, 010 |
-| `SunatCatalogDTO` | [catalog.schema.json](../specs/schemas/catalog.schema.json) | SPEC-011 |
+| `SalesRecordLine`, `InventoryRecordLine`, `LedgerPeriodStatus` | [ledger.schema.json](../specs/schemas/ledger.schema.json) | SPEC-013 |
+| `SunatCatalogDTO` (catalogs and PLE tables) | [catalog.schema.json](../specs/schemas/catalog.schema.json) | SPEC-011, 013 |
 | `ErrorDTO` (problem+json) | [error.schema.json](../specs/schemas/error.schema.json) | Whole API |
 
 Examples validated against the schemas: [specs/schemas/examples/](../specs/schemas/examples/).
@@ -220,6 +255,7 @@ Examples validated against the schemas: [specs/schemas/examples/](../specs/schem
 
 - **Amounts as decimal strings**: JSON `number` is parsed as `double` by many clients and causes
   rounding errors (e.g. `0.1 + 0.2`). It is a frequent cause of rejections due to IGV mismatches.
+- **A note is not an invoice**: in UBL, `Invoice`, `CreditNote` and `DebitNote` are separate roots (the debit note even uses `RequestedMonetaryTotal`), so `Invoice` and `Note` extend an abstract `SalesDocument`.
 - **Request ≠ response**: the client sends only the input data (`LineRequest`); the amounts are
   **always** calculated by the domain (`CalculatedLine`). The calculation is not duplicated on
   Windows and Android, and totals sent by the client are never trusted.

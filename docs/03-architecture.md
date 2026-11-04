@@ -82,14 +82,14 @@ flowchart LR
 flowchart LR
     subgraph IN["INPUT adapters (MVC: Controller)"]
         rest["InvoiceController<br/>NoteController<br/>MigrationController<br/>…"]
-        sched["Scheduler<br/>(daily summary, retries)"]
+        sched["Scheduler and outbox worker<br/>(submission, daily summary, retries)"]
     end
 
     subgraph CORE["CORE — no framework dependencies (MVC: Model)"]
         subgraph APP["application"]
-            pin["Input ports<br/>IssueInvoiceUseCase<br/>IssueNoteUseCase<br/>CalculateTaxesUseCase<br/>ValidateCustomerUseCase<br/>SubmitSummaryUseCase<br/>MigrateLegacyUseCase"]
+            pin["Input ports<br/>IssueInvoiceUseCase<br/>IssueNoteUseCase<br/>CalculateTaxesUseCase<br/>ValidateCustomerUseCase<br/>SubmitSummaryUseCase<br/>MigrateLegacyUseCase<br/>GenerateSalesRecordUseCase<br/>GenerateInventoryRecordUseCase"]
             svc["Application services<br/>(orchestration, transactional)"]
-            pout["Output ports<br/>InvoiceRepository<br/>SeriesRepository<br/>ProductRepository<br/>RucRegistryPort<br/>UblGeneratorPort<br/>DigitalSignaturePort<br/>SunatSubmissionPort<br/>FileStoragePort<br/>LegacySourcePort"]
+            pout["Output ports<br/>InvoiceRepository<br/>SeriesRepository<br/>ProductRepository<br/>RucRegistryPort<br/>UblGeneratorPort<br/>DigitalSignaturePort<br/>SunatSubmissionPort<br/>OutboxPort<br/>PleExporterPort<br/>FileStoragePort<br/>LegacySourcePort"]
         end
         subgraph DOM["domain"]
             ent["Invoice · Note · Series<br/>Product · Customer · Movement"]
@@ -108,6 +108,7 @@ flowchart LR
         reg["RucRegistryAdapter"]
         fs["XML/CDR/PDF files"]
         leg["LegacyCsvAdapter"]
+        ple["PleTxtAdapter<br/>SireExporterAdapter"]
     end
 
     rest --> pin
@@ -119,7 +120,12 @@ flowchart LR
     pout -. implemented by .-> reg
     pout -. implemented by .-> fs
     pout -. implemented by .-> leg
+    pout -. implemented by .-> ple
 ```
+
+**Transaction boundaries** ([ADR-004](adr/004-transactions-and-outbox.md)): the series row lock lasts only
+for the numbering transaction, which makes no network call. The submission to the OSE runs later from the
+outbox, so a slow OSE never blocks the numbering of other sales.
 
 **Dependency rule** (verifiable with ArchUnit during implementation):
 
@@ -147,6 +153,7 @@ com.abc.invoicing
 ├── sunatintegration/       UblGenerator, DigitalSignature, SunatSubmission (SUNAT or OSE)
 ├── inventory/
 ├── migration/
+├── ledgers/                GenerateSalesRecord, GenerateInventoryRecord, PleExporterPort
 └── catalogs/
 ```
 
@@ -163,8 +170,9 @@ sequenceDiagram
     participant T as TaxCalculator
     participant S as SeriesRepository
     participant X as UblGeneratorPort + DigitalSignaturePort
+    participant R as InvoiceRepository + OutboxPort
+    participant W as Outbox worker
     participant E as SunatSubmissionPort (OSE/SUNAT)
-    participant R as InvoiceRepository
     participant EV as Events (Inventory)
 
     V->>UI: Records a sale
@@ -174,22 +182,27 @@ sequenceDiagram
     ID-->>UC: ACTIVE / LOCATED
     UC->>T: calculate(lines)
     T-->>UC: lines + totals
-    UC->>S: nextSequenceNumber(F001) [lock]
-    S-->>UC: 123
-    UC->>X: build UBL 2.1 XML + sign
-    X-->>UC: signed XML + hash
-    UC->>R: save (SIGNED)
-    UC->>E: submit(zip)
-    alt CDR received
-        E-->>UC: CDR (0 / ≥4000 / 2xxx-3xxx)
-        UC->>R: update status
-        UC-)EV: InvoiceAccepted
-    else No connection
-        E-->>UC: timeout
-        UC->>R: PENDING_SUBMISSION
+    rect rgba(127, 127, 127, 0.15)
+        Note over UC,R: Numbering transaction: milliseconds, no external I/O
+        UC->>S: nextSequenceNumber(F001) [row lock]
+        S-->>UC: 123
+        UC->>X: build UBL 2.1 XML + sign
+        X-->>UC: signed XML + hash
+        UC->>R: save (SIGNED) + write outbox row
     end
+    W->>R: read outbox (SKIP LOCKED)
+    W->>E: submit(zip)
+    alt CDR received
+        E-->>W: CDR (0 / ≥4000 / 2xxx-3xxx)
+        W->>R: update status + write event to outbox
+        W-)EV: InvoiceAccepted
+    else No connection
+        E-->>W: timeout
+        W->>R: PENDING_SUBMISSION (retried with backoff)
+    end
+    UC->>R: wait a few seconds for the result (no open transaction)
     UC-->>C: Invoice
-    C-->>UI: 201 / 202
+    C-->>UI: 201 (with CDR result) / 202 (no CDR yet)
 ```
 
 ## 6. Migration path to microservices
@@ -197,10 +210,10 @@ sequenceDiagram
 ```mermaid
 flowchart LR
     subgraph F1["Phase 1 — Modular MVC monolith (today)"]
-        m1["1 deployable<br/>1 DB, schema per module<br/>in-memory events"]
+        m1["1 deployable<br/>1 DB, schema per module<br/>events and submission via outbox"]
     end
     subgraph F2["Phase 2 — Explicit hexagonal"]
-        m2["Same deployable<br/>modules with internal API<br/>events via outbox"]
+        m2["Same deployable<br/>modules with internal API<br/>outbox relayed to a broker"]
     end
     subgraph F3["Phase 3 — Microservices"]
         g["API Gateway"]
@@ -233,9 +246,9 @@ JSON Schemas. The API Gateway routes the same paths to different services.
 
 | Attribute | Tactic |
 |---|---|
-| Availability when SUNAT/OSE is down | `PENDING_SUBMISSION` status, retries with backoff, persistent queue. |
-| Numbering integrity | Pessimistic lock per series + `Idempotency-Key`. |
+| Availability when SUNAT/OSE is down | Outbox, `PENDING_SUBMISSION` status and retries with backoff (ADR-004). |
+| Numbering integrity | Lock per series only during the numbering transaction + `Idempotency-Key`. |
 | Certificate security | Signing on the server only (ADR-003); `.pfx` in a secrets store. |
 | Maintainability under regulatory changes | Parameters with effective periods (IGV, ICBPER, thresholds) and versioned catalogs (SPEC-011). |
 | Portability | Kotlin Multiplatform: one codebase for Windows and Android (ADR-001). |
-| Traceability / audit | `DataOrigin` + status change log (RS 234-2006). |
+| Traceability / audit | `DataOrigin`, status change log and formal books 14.1 and 12.1 (RS 234-2006, SPEC-013). |

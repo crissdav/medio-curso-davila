@@ -24,6 +24,7 @@ software only records the warehouse's day-to-day activity through informal recor
 | Does not communicate with an OSE / SUNAT | The document is never validated (no CDR) | SPEC-007, SPEC-008 |
 | Does not control sequence numbers | Duplicates or numbering gaps | SPEC-005 |
 | Informal historical data | Loss of traceability (RS 234-2006) | SPEC-009, SPEC-010 |
+| No formal books | Sales record (format 14.1) and inventory in physical units (format 12.1) are not kept | SPEC-013 |
 
 ## 2. Scope of this phase (Spec-First skeleton)
 
@@ -33,6 +34,7 @@ software only records the warehouse's day-to-day activity through informal recor
 - Documents with a use case and endpoint but no detailed schema: Daily summary (RC), Voiding communication (RA).
 - Key validations: RUC (modulus 11), DNI, series and sequence numbers, 18 % IGV, ISC (catalog 08), ICBPER, totals reconciliation.
 - Migration of the legacy warehouse data.
+- Electronic books: format 14.1 (sales record) and format 12.1 (inventory in physical units).
 - Monolithic MVC architecture ready for Hexagonal / microservices.
 
 **Out of scope (phase 2 or later)**
@@ -47,7 +49,9 @@ software only records the warehouse's day-to-day activity through informal recor
 | Regulation | What it requires | Design impact |
 |---|---|---|
 | **RS N° 097-2012/SUNAT** | Creates the Electronic Issuance System developed from the taxpayer's own systems (SEE – Del Contribuyente). | The system builds, signs and submits the XML. Drives SPEC-006/007. |
-| **RS N° 234-2006/SUNAT** | Rules on tax-related books and records. | Formal, unalterable and traceable records → audit trail and migration with origin (SPEC-009). |
+| **RS N° 234-2006/SUNAT** | Rules on tax-related books and records: defines format 14.1 (sales and income record), format 12.1 (permanent inventory in physical units) and the tables they use. | Formal books generated from the domain (SPEC-013); traceable records and migration with origin (SPEC-009). |
+| **RS N° 286-2009/SUNAT** and amendments (RS 361-2015, RS 108-2020) | Electronic books (PLE): file names, structures and tables of the records. | TXT layout of formats 14.1 and 12.1 (SPEC-013, matrix sections 11–12). |
+| SIRE (RVIE) | Replaces the PLE sales record for obligated taxpayers, according to the SUNAT schedule. | Second adapter of `PleExporterPort` (SPEC-013). |
 | [**RS N.° 000193-2020/SUNAT**](https://www.sunat.gob.pe/legislacion/superin/2020/193-2020.pdf) | Amends electronic issuance of the invoice and the credit note: **payment terms** information (cash / credit, pending amount, installments). Its [Annex IV](https://www.sunat.gob.pe/legislacion/superin/2020/anexo4-193-2020.pdf) sets the UBL 2.1 tags (`cac:PaymentTerms`, `FormaPago`, `Cuota001`). | Payment terms in the DTO and in the XML (SPEC-001 R-06, matrix T-20 … T-22). |
 | Mass-adoption regulations and amendments | Mandatory electronic issuance and submission deadlines. | Configurable deadlines (SPEC-007, SPEC-008). |
 | **Annex 8 — SUNAT catalogs** | Official codes: document type, currency, taxes, IGV affectation, ISC, etc. | SPEC-011 and `specs/catalogs/`. |
@@ -85,4 +89,7 @@ Peruvian tax terms are kept in their original form; the English equivalent is us
 | **Afectación del IGV** | IGV affectation (taxed, exempt, unaffected…) | `igvAffectation` |
 | **Padrón RUC** / **No habido** | RUC registry / taxpayer not located at its fiscal address | `Taxpayer.condition` |
 | **RC / RA** | Daily summary of sales receipts / Voiding communication (*comunicación de baja*) | `daily-summaries`, `voided-documents` |
+| **PLE** / **SIRE** | Electronic books program / Integrated System of Electronic Records | `PleExporterPort` |
+| **CUO** | Unique operation code of a book entry | `cuo` |
+| **Tablas PLE** | PLE tables 2, 5, 6, 10 and 12, separate from the catalogs of the XML | `specs/ple-tables/` |
 | **Legacy** | Current warehouse record system | `LEGACY` |
