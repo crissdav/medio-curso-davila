@@ -2,7 +2,7 @@
 
 - **Status:** Draft
 - **Date:** 2026-10-22
-- **Related:** ADR-001, ADR-003 · [Traceability matrix](../../docs/05-traceability-matrix.md)
+- **Related:** ADR-003, ADR-005 · [Traceability matrix](../../docs/05-traceability-matrix.md)
 
 ## Summary
 Translate the `Invoice` aggregate into XML compliant with `UBL-Invoice-2.1.xsd`,
@@ -24,9 +24,12 @@ with XMLDSig.
 | R-10 | The signed XML and the CDR are kept for the legal retention period. |
 
 ## Acceptance criteria
-- **AC-1:** Given the document in [invoice-response.json](../schemas/examples/invoice-response.json), when I generate the XML, then it is equivalent to [20123456786-01-F001-123.xml](../ref/20123456786-01-F001-123.xml) and validates against `UBL-Invoice-2.1.xsd` (`npm run check:xsd`).
+- **AC-1:** Given the document in [invoice-response.json](../schemas/examples/invoice-response.json), when I generate the XML, then it is equivalent to [20123456786-01-F001-123.xml](../ref/20123456786-01-F001-123.xml) and validates against `UBL-Invoice-2.1.xsd` (`python -m pytest`).
 - **AC-2:** Given a signed XML, when I alter an amount, then signature verification fails.
 - **AC-3:** Given an expired certificate, then signing is rejected with a configuration error and the document does not move past `DRAFT`.
+
+## Implementation
+The invoice (01 and 03) is implemented in [invoice_generator.py](../../src/abc_invoicing/adapters/ubl/invoice_generator.py) with tests in [test_invoice_generation.py](../../tests/test_invoice_generation.py). R-05 (signing), R-08 (ZIP file) and the `CreditNote` and `DebitNote` roots are not implemented yet. Phase 2 codes (operation types other than 0101, affectations 17 and 40) are rejected by the domain (SPEC-011 R-03).
 
 ## References
 - SUNAT sample XML and XSD validation: [specs/ref/](../ref/README.md)

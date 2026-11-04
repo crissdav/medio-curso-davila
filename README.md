@@ -1,92 +1,141 @@
-# ABC Software Corp — SUNAT Electronic Invoicing (Spec-First)
+# ABC Software Corp — SUNAT Electronic Invoicing
 
-**First phase (Spec-First)**: technical specifications defined before writing any business logic.
-It contains no implementation code.
+Specifications and XML generator for the electronic invoicing system of ABC Software Corp, a Peruvian grocery
+wholesaler and retailer. The project follows **Spec-First**: rules, contracts and traceability were defined first, and
+the code then implements them.
+
 **Reference country: Peru** — UBL 2.1 with the SUNAT customization.
 
-> Language: everything is in English following common practice. Official Peruvian tax terms (RUC,
-> IGV, ISC, ICBPER, CDR) and literal SUNAT values (`FormaPago`, `Contado`, `Credito`) keep their
-> original form; catalogs carry the official Spanish name next to the English description; legacy
-> column names and example business data stay as they are in the source. See the glossary in
-> [00-context](docs/00-context.md).
+| Phase | Deliverable | Status |
+|---|---|---|
+| Midterm exam | Specifications: domain model, architecture, API contracts and traceability matrix | Done, with the instructor's feedback applied |
+| Second partial | Generation of the XML from the `UBL-Invoice-2.1.xsd` schema, with unit tests | Done |
+| Later | Signing, submission to SUNAT/OSE, API and client apps | Specified, not implemented |
 
-## 1. Summary of the work
+## Quick start
 
-| Phase | Result |
-|---|---|
-| **Understand** | Case analysis: the legacy system is a warehouse control (`fecha, ingreso, salida, producto, nro_documento`) without RUC validation, tax calculation, UBL XML or SUNAT/OSE connection. Regulatory basis: RS 097-2012, RS 234-2006, RS 000193-2020 (payment terms), SUNAT catalogs (with emphasis on **catalog 08 — ISC**) and UBL 2.1 with the SUNAT customization. |
-| **Plan** | 13 functional specs derived from each gap in the exam statement, 4 architecture decisions (ADR) and a `docs/` + `specs/` structure. |
-| **Act** | The 4 exam deliverables + use cases (checked against Nubefact), legacy migration, formal books 14.1 and 12.1, 14 JSON Schemas, 11 catalogs, 5 PLE tables, OpenAPI contract and sample SUNAT UBL XML and PLE files. |
-| **Validate** | Automatic script with 935 checks, OpenAPI lint, rendering of the 10 diagrams and two-layer XML validation: structure (official UBL 2.1 XSD) and SUNAT content (catalogs, RUC, arithmetic and cross-check with the JSON). It caught and fixed 2 calculation errors in the invoice example. |
-
-**Key decisions**
-
-- **MVC on the outside, hexagonal on the inside:** MVC lives only in the delivery layer; the model is
-  a domain core with ports, so migrating to Hexagonal / microservices means reorganizing, not rewriting.
-- **ISC (catalog 08):** calculated before the IGV because it is part of its base; the invoice example
-  uses beer (fixed amount, 02) and a soft drink (ad valorem, 01).
-- **Legacy:** migrated with a hash per row for traceability; `nro_documento` never becomes a SUNAT sequence number.
-- **Amounts as decimal strings** to avoid floating-point rounding errors.
-- **Formal books:** formats 14.1 and 12.1 are generated from the domain through `PleExporterPort`, with SIRE as a second adapter; PLE tables are separate from the XML catalogs.
-- **Two transactions and an outbox:** the series lock lasts milliseconds and never waits for the OSE.
-- **Recommended stack:** Kotlin Multiplatform (MSI + APK) and Spring Boot; digital signing on the server only.
-
-## 2. Exam deliverables
-
-| Deliverable | Where |
-|---|---|
-| 1. Domain Model and Contracts (DTOs / Schemas) | [docs/02-domain-model.md](docs/02-domain-model.md) · [specs/schemas/](specs/schemas/) · [specs/catalogs/](specs/catalogs/) |
-| 2. MVC Architecture Diagrams with a Hexagonal outlook | [docs/03-architecture.md](docs/03-architecture.md) · [docs/adr/](docs/adr/) |
-| 3. Endpoint / Service Specification | [docs/04-api-contracts.md](docs/04-api-contracts.md) · [specs/api/openapi.yaml](specs/api/openapi.yaml) |
-| 4. Regulatory Traceability Matrix SUNAT ↔ UBL, with formats 14.1 and 12.1 | [docs/05-traceability-matrix.md](docs/05-traceability-matrix.md) · [specs/ple-tables/](specs/ple-tables/) |
-
-Supporting material: [context and regulations](docs/00-context.md) · [use cases](docs/01-use-cases.md) ·
-[legacy migration](docs/06-legacy-migration.md) · [UBL reference](specs/ref/README.md).
-
-## 3. Functional specs
-
-| ID | Spec |
-|---|---|
-| [SPEC-001](specs/features/001-invoice-receipt-issuance.md) | Invoice and sales receipt issuance |
-| [SPEC-002](specs/features/002-credit-debit-notes.md) | Credit and debit notes |
-| [SPEC-003](specs/features/003-tax-calculation.md) | Tax calculation (IGV, ISC cat. 08, ICBPER) |
-| [SPEC-004](specs/features/004-identity-validation.md) | RUC / DNI validation |
-| [SPEC-005](specs/features/005-series-numbering.md) | Series and sequence numbers |
-| [SPEC-006](specs/features/006-ubl-xml-signature.md) | UBL 2.1 XML and digital signature |
-| [SPEC-007](specs/features/007-ose-sunat-submission.md) | Submission to the OSE / SUNAT and CDR |
-| [SPEC-008](specs/features/008-daily-summary-voiding.md) | Daily summary and voiding communication |
-| [SPEC-009](specs/features/009-legacy-migration.md) | Legacy data migration |
-| [SPEC-010](specs/features/010-inventory.md) | Inventory integrated with sales |
-| [SPEC-011](specs/features/011-sunat-catalogs.md) | SUNAT catalogs |
-| [SPEC-012](specs/features/012-multiplatform-distribution.md) | MSI / APK distribution |
-| [SPEC-013](specs/features/013-electronic-books-ple.md) | Electronic books (PLE): formats 14.1 and 12.1 |
-
-ADR: [001 Stack](docs/adr/001-multiplatform-stack.md) ·
-[002 MVC monolith with ports](docs/adr/002-mvc-monolith-with-ports.md) ·
-[003 Server-side signing](docs/adr/003-server-side-signing.md) ·
-[004 Transactions and outbox](docs/adr/004-transactions-and-outbox.md).
-
-## 4. Validation
+Requires Python 3.10 or later (tested on 3.13). The official XSDs and the generated classes are included, so nothing else is downloaded.
 
 ```bash
-npm install
-npm run validate        # schemas, examples, SPEC-003 arithmetic, matrix, PLE books, API responses, links, SUNAT XML content and OpenAPI lint
-npm run check:mermaid   # renders the diagrams (uses an installed Chrome/Edge or CHROME_PATH)
-npm run check:xsd       # STRUCTURE layer: XML against the official OASIS UBL 2.1 XSD (requires JDK 11+)
-npm run check:sunat     # CONTENT layer: SUNAT codes, RUC, arithmetic and XML ↔ JSON cross-check (included in validate)
+python -m venv .venv
+.venv\Scripts\activate          # Linux / macOS: source .venv/bin/activate
+pip install -e ".[dev]"
+
+python -m pytest                # 60 XML generation tests
+python -m abc_invoicing specs/schemas/examples/invoice-response.json tests/fixtures/company.json -o invoice.xml
 ```
 
-OASIS UBL 2.1 provides the structure and the SUNAT customization defines the values for Peru; that is
-why the XML files are validated against both layers (details in [specs/ref/](specs/ref/README.md)).
+## 1. The problem
 
-## 5. Future work
+ABC only has a warehouse system that records `fecha, ingreso, salida, producto, nro_documento`. It does not validate
+RUCs, does not calculate taxes, does not generate UBL XML, is not signed and does not communicate with an OSE or SUNAT,
+and it does not keep the formal records that SUNAT requires. The new system had to close those gaps, migrate the legacy
+data without losing traceability, start as an MVC monolith ready for Hexagonal and microservices, and run on Windows
+(MSI) and Android (APK).
 
-- Confirm against the current regulations the submission and voiding deadlines, the sales receipt threshold (S/ 700) and the ICBPER amount (S/ 0.50).
-- Replace the illustrative ISC rates in the example with the current rates.
-- Detail the daily summary and voiding communication (SPEC-008) and the full catalog of SUNAT errors.
+## 2. What was done and why
 
-## 6. Pending (optional)
+### Specifications
 
-- **Nubefact DEMO account:** screen-by-screen walkthrough of the use cases. It requires a RUC, which is
-  not available; the instructor stated it is optional. All 16 verification points were already
-  confirmed with Nubefact's public documentation (section 7 of [use cases](docs/01-use-cases.md)).
+| What | Why | Where |
+|---|---|---|
+| 13 functional specs with rules and acceptance criteria | Each one answers a gap in the case, so that every rule can be tested before code exists | [specs/features/](specs/features/) |
+| Domain model with invariants and lifecycle | The rules live in the domain, not in the screens or the database | [02-domain-model](docs/02-domain-model.md) |
+| JSON Schemas as contracts; amounts as decimal strings | `double` values cause rounding errors, a frequent reason for SUNAT rejections | [specs/schemas/](specs/schemas/) |
+| 11 SUNAT catalogs, with the English description and the official name | Codes must come from one source, and legal wording must stay faithful to SUNAT | [specs/catalogs/](specs/catalogs/) |
+| OpenAPI contract with 29 operations | The API is agreed before implementing it; the same contract survives the move to microservices | [openapi.yaml](specs/api/openapi.yaml), [04-api-contracts](docs/04-api-contracts.md) |
+| Traceability matrix: 60 UBL rows, plus 35 rows for format 14.1 and 19 for format 12.1 | Every piece of data required by SUNAT can be followed from the regulation to the XML and the contract | [05-traceability-matrix](docs/05-traceability-matrix.md) |
+| Use cases checked against Nubefact's public documentation | They reflect what real invoicing software does | [01-use-cases](docs/01-use-cases.md) |
+| Legacy migration with one hash per row and reconciliation | Every record can be traced back to its source (RS 234-2006) | [06-legacy-migration](docs/06-legacy-migration.md) |
+
+### Key decisions
+
+| Decision | Why | Record |
+|---|---|---|
+| **MVC on the outside, ports and adapters on the inside** | The MVC model is a domain core with no framework, so moving to Hexagonal means reorganizing, not rewriting | [ADR-002](docs/adr/002-mvc-monolith-with-ports.md) |
+| **Signing only on the server** | A lost phone must not expose the company's private key | [ADR-003](docs/adr/003-server-side-signing.md) |
+| **Two transactions and an outbox** | The series lock lasts milliseconds and never waits for the OSE | [ADR-004](docs/adr/004-transactions-and-outbox.md) |
+| **Kotlin Multiplatform for the clients** | It builds both the MSI and the APK from shared code | [ADR-001](docs/adr/001-multiplatform-stack.md) |
+| **Python and `xsdata` for the XML** | The classes come from the official XSD, so the structure cannot drift from it; templates would allow that | [ADR-005](docs/adr/005-python-xml-generation.md) |
+
+### Changes after the instructor's feedback
+
+| Finding | Change | Why |
+|---|---|---|
+| Formats 14.1 and 12.1 were missing | [SPEC-013](specs/features/013-electronic-books-ple.md), [PLE tables](specs/ple-tables/), inventory fields, endpoints, [TXT samples](specs/ref/ple/) and matrix sections 11–12 | RS 234-2006 requires formal records, and an Excel report is not one. PLE units follow table 6, not UN/ECE, and exits in format 12.1 are negative |
+| Incomplete HTTP codes | Reusable 401, 403, 429 and 5xx responses; 400 for format and 422 for business rules | A SUNAT rejection is not an API error: the document exists and its number is consumed, so it returns 201 with status `REJECTED` |
+| Series lock tied to the OSE response | Numbering and submission are separated | A slow OSE would otherwise block every sale on that series |
+| A note inherited from an invoice | Abstract `SalesDocument` | In UBL, `Invoice`, `CreditNote` and `DebitNote` are separate roots |
+| Beer ISC "per litre" invoiced per unit | `unitConversionFactor` | A 620 ml bottle pays for 0.62 L, which changes the example total to S/ 377.67 |
+| Row T-44 disagreed with the schema | `unitPrice` carries the reference value; `unitValue` is 0 on free-of-charge lines | The matrix and the contract must name the same field |
+| Validator failed with Windows line endings | Line endings are normalized, and `.gitattributes` was added | The result must not depend on the operating system |
+
+### XML generation (second partial)
+
+```text
+invoice-response.json → invoice_mapper → Invoice (domain) → UblInvoiceGenerator → classes from the XSD → XML → XSD check
+```
+
+| What | Why |
+|---|---|
+| [`generated.py`](src/abc_invoicing/adapters/ubl/generated.py) is generated by `xsdata` from `UBL-Invoice-2.1.xsd` | Element names, order and types come from the official schema |
+| [`domain/`](src/abc_invoicing/domain/models.py) has no XML dependency and enforces invariants: F/B series, RUC check digit, sequence range and totals that add up | The XSD does not check these values, so an invalid document must stop before reaching the generator |
+| [`invoice_generator.py`](src/abc_invoicing/adapters/ubl/invoice_generator.py) applies the SUNAT customization, citing the `T-nn` matrix row of each block | The code can be audited against the regulation |
+| Every XML is validated against the XSD before it is returned | SPEC-006 R-04: a document that breaks the schema must never reach signing |
+
+It generates invoices (01) and sales receipts (03) with taxed, exempt, unaffected and free-of-charge lines, ISC by catalog 08
+system, ICBPER, line discounts, cash or credit payment terms and foreign currency.
+
+The [60 tests](tests/test_invoice_generation.py) check that the generated XML equals the [reference invoice](specs/ref/20123456786-01-F001-123.xml)
+element by element, complies with the XSD, reports each matrix row correctly and handles the other operations. They also
+reject invalid documents and confirm that the code's tax tables match the SUNAT catalogs.
+
+## 3. How it is verified
+
+```bash
+python -m pytest        # XML generation
+npm install
+npm run validate        # schemas, examples, arithmetic, matrix, PLE books, API responses, links, XML content and OpenAPI lint
+npm run check:xsd       # sample XML files against the official XSD (requires Java 11+)
+npm run check:mermaid   # renders the diagrams (requires Chrome or Edge)
+```
+
+The specifications are checked too, because a wrong spec produces wrong code: **936** automatic checks cover them.
+OASIS UBL 2.1 provides the structure and the SUNAT customization defines the values for Peru, so sample XML files are
+validated against [both layers](specs/ref/README.md). The tests and checks were also confirmed by introducing errors on
+purpose, to verify that they fail when they should.
+
+## 4. Repository map
+
+```text
+src/abc_invoicing/       XML generator: domain, application and UBL adapter
+tests/                   Unit tests of the XML generation
+docs/                    Context, use cases, domain, architecture, API, matrix, migration and ADRs
+specs/features/          Functional specs (SPEC-001 … SPEC-013)
+specs/schemas/           JSON Schemas and validated examples
+specs/api/               OpenAPI contract
+specs/catalogs/          SUNAT catalogs of the XML
+specs/ple-tables/        PLE tables and unit mapping for the books
+specs/ubl/xsd/           Official OASIS UBL 2.1 XSDs (runtime version, unmodified)
+specs/ref/               Sample XML and PLE files
+scripts/                 Validators of the specifications
+```
+
+Start with [00-context](docs/00-context.md), which also has a glossary of the Peruvian tax terms.
+
+**Exam deliverables:** [domain model and contracts](docs/02-domain-model.md) · [MVC architecture with a Hexagonal outlook](docs/03-architecture.md) · [API contracts](docs/04-api-contracts.md) · [traceability matrix](docs/05-traceability-matrix.md).
+
+**Language:** the repository is in English. Official tax terms (RUC, IGV, ISC, ICBPER, CDR) and literal SUNAT values
+(`FormaPago`, `Contado`, `Credito`) keep their original form, as do the legacy column names and the example business data.
+
+## 5. Limitations and next steps
+
+- **Not implemented:** digital signature, credit and debit notes, tax calculation (the generator receives calculated
+  amounts), IVAP and exports (rejected with an error), submission to SUNAT/OSE, the API and the client apps. The XML is unsigned, so it is not yet a valid tax document.
+- **Backend language:** ADR-001 proposed a JVM backend and ADR-005 implemented this component in Python. The language of
+  the rest of the backend must be confirmed before implementing it.
+- **To confirm against current regulations:** submission and voiding deadlines, the S/ 700 threshold, the S/ 0.50 ICBPER
+  amount, the PLE file name and the table 13 codes. The ISC rates in the example are illustrative.
+- **To validate with an accountant:** how credit notes, free-of-charge operations and rejected documents appear in format 14.1 (open questions in SPEC-013).
+- **Pending by agreement:** separating the CDR ranges 0100–0999 and 1000–1999, and adding sample XML files for the sales receipt and the credit note.
+- **Optional:** a walkthrough with a Nubefact DEMO account, which requires a RUC. The use cases were checked against its public documentation instead.

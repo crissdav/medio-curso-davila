@@ -102,7 +102,7 @@ flowchart LR
 
     subgraph OUT["OUTPUT adapters"]
         jpa["JPA / PostgreSQL"]
-        ubl["UBL 2.1 (JAXB)"]
+        ubl["UBL 2.1 (classes from the XSD, ADR-005)"]
         sig["XMLDSig (.pfx certificate)"]
         soap["SOAP client<br/>SunatAdapter | OseAdapter"]
         reg["RucRegistryAdapter"]

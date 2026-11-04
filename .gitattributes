@@ -1,4 +1,5 @@
 * text=auto eol=lf
+src/abc_invoicing/adapters/ubl/generated.py linguist-generated=true
 *.docx binary
 *.png binary
 *.pdf binary

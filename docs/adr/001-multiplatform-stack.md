@@ -1,6 +1,6 @@
 # ADR-001: Multiplatform technology stack
 
-- **Status:** Proposed (justified recommendation; subject to team confirmation)
+- **Status:** Proposed; the XML generation component is replaced by [ADR-005](005-python-xml-generation.md) (Python). The clients and their packaging are unchanged.
 - **Date:** 2026-10-22
 
 ## Context
