@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+  <ext:UBLExtensions>
+    <ext:UBLExtension>
+      <ext:ExtensionContent><ds:Signature Id="SIGN-ABC"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><ds:Reference URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>baQHs0yUh3KeuCVuegzAICLY+iDW+dGR8eXfQq319g0=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>QgylN8lfi1CyGn34lHogHRKQJ2RXBH0/2X7pwRBNZkyF/p/239NnUULx8gAMzooR3xNvRLbQ2Z+oX9OBOh/j8o2+23xtRE6Pg0P0Am9oDuvLjaKbp5m8wYpodEi0CtmEjEl1G19TK8ZrRqR1UCCG2a8/cwJJGLIGXSPoj/PpX1VKvk+uvQ4CYDYpurYv/sBWyyzQcZirqbiRC/pnHJyXoaAtK4Dbk9cFe2Hdw/VONH2ma46hAuAGXLQYpZx16bsJl7nld00xYG3+mt9dDIu+5oAf21nslbXt1T1x+1TIXWThYAlMgPDftfe+5CDbb31EzkLowTdDxv+q0gg2TYR3mA==</ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIIDkjCCAnqgAwIBAgIUDpVdGCL+EQcPOMccv778YZqwHs0wDQYJKoZIhvcNAQEL
+BQAwcjELMAkGA1UEBhMCUEUxITAfBgNVBAoMGEFCQyBTT0ZUV0FSRSBDT1JQIFMu
+QS5DLjEUMBIGA1UEBRMLMjAxMjM0NTY3ODYxKjAoBgNVBAMMIUFCQyBTT0ZUV0FS
+RSBDT1JQIFMuQS5DLiAtIFBSVUVCQTAeFw0yNjExMTIxMzUyMDVaFw0yNzExMTIx
+MzUyMDVaMHIxCzAJBgNVBAYTAlBFMSEwHwYDVQQKDBhBQkMgU09GVFdBUkUgQ09S
+UCBTLkEuQy4xFDASBgNVBAUTCzIwMTIzNDU2Nzg2MSowKAYDVQQDDCFBQkMgU09G
+VFdBUkUgQ09SUCBTLkEuQy4gLSBQUlVFQkEwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+DwAwggEKAoIBAQC1WAgbQF7NhoHBsOKi8+K6jCGOi0Gpxr53gVzwd0joZOr8uZNm
+7ReiS/SJu9hJjmanYiNy1SMWH1Uf9yAQJ4uvBjj26i4jZByPm0Du8FMMIev0E9NE
+hUo+MW8+dEfAfOJcUXe4sqWw23DlrKfDP59yDhCo9GAEaA/AhlNCU5Xs7XcYO2Yg
+vuI4Bgs8s5bypE6pXogyhP1nMXSuU8zC7RUrrkLt5GlyeytQtIOtkD/Hf6nZp+vq
+2kLo0sjEq2HBpE2AOoaJeiD57YOFEQ4+kgeogEOKMGoZv9+EMgmIiNCJOc1IhxTg
+IU2smfzX5VLGUExWx/LYLT7YnaDSA5PXwfgxAgMBAAGjIDAeMAwGA1UdEwEB/wQC
+MAAwDgYDVR0PAQH/BAQDAgbAMA0GCSqGSIb3DQEBCwUAA4IBAQAUBlm6eh2un01b
+YmC93cqh2jlwD1Rydi8o7QPM+pQz+tm+oAu7At31Yn08jSVI2QSP/vbxogGuZuT9
+USJb3KZPddKPuFEBdo2snudU7B2qeg9Rw/inmpWMkmXSwYaEfRsHZaSIsY6w4WJu
+8Ds8p5KpT9uA9jAr5n+Q7ULTQ2jUmqAaehDEo8vAnzgMdJacf2ZfdFg3C7N6ncHg
+ia7cyx2qnecPb7kPxyay3gaXPY9euKvr36Ccp3cdLdr3ydUSyWF29Lrf1nzq0ObG
+nZVj7UsP/TePI17d2lJLjs1oqBAgnBwtZ/4ox9IeUUQeupZ/JnHzZ0PELa/4QQV8
+2AGM2Wiu
+</ds:X509Certificate></ds:X509Data></ds:KeyInfo></ds:Signature></ext:ExtensionContent>
+    </ext:UBLExtension>
+  </ext:UBLExtensions>
+  <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+  <cbc:CustomizationID schemeAgencyName="PE:SUNAT">2.0</cbc:CustomizationID>
+  <cbc:ID>F001-124</cbc:ID>
+  <cbc:IssueDate>2026-11-12</cbc:IssueDate>
+  <cbc:IssueTime>11:00:00</cbc:IssueTime>
+  <cbc:InvoiceTypeCode listID="0101" listAgencyName="PE:SUNAT" listName="Tipo de Documento" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01">01</cbc:InvoiceTypeCode>
+  <cbc:Note languageLocaleID="1000">NOVECIENTOS SETENTA Y UNO CON 14/100 SOLES</cbc:Note>
+  <cbc:DocumentCurrencyCode listID="ISO 4217 Alpha" listAgencyName="United Nations Economic Commission for Europe">PEN</cbc:DocumentCurrencyCode>
+  <cac:Signature>
+    <cbc:ID>SIGN-ABC</cbc:ID>
+    <cac:SignatoryParty>
+      <cac:PartyIdentification>
+        <cbc:ID>20123456786</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name>ABC SOFTWARE CORP S.A.C.</cbc:Name>
+      </cac:PartyName>
+    </cac:SignatoryParty>
+    <cac:DigitalSignatureAttachment>
+      <cac:ExternalReference>
+        <cbc:URI>#SIGN-ABC</cbc:URI>
+      </cac:ExternalReference>
+    </cac:DigitalSignatureAttachment>
+  </cac:Signature>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="6" schemeName="Documento de Identidad" schemeAgencyName="PE:SUNAT" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">20123456786</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name>ABC ABARROTES</cbc:Name>
+      </cac:PartyName>
+      <cac:PartyLegalEntity>
+        <cbc:RegistrationName>ABC SOFTWARE CORP S.A.C.</cbc:RegistrationName>
+        <cac:RegistrationAddress>
+          <cbc:ID schemeName="Ubigeos" schemeAgencyName="PE:INEI">100601</cbc:ID>
+          <cbc:AddressTypeCode>0000</cbc:AddressTypeCode>
+          <cac:AddressLine>
+            <cbc:Line>Jr. Monzón 456, Tingo María</cbc:Line>
+          </cac:AddressLine>
+          <cac:Country>
+            <cbc:IdentificationCode>PE</cbc:IdentificationCode>
+          </cac:Country>
+        </cac:RegistrationAddress>
+      </cac:PartyLegalEntity>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="6" schemeName="Documento de Identidad" schemeAgencyName="PE:SUNAT" schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">20609876540</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyLegalEntity>
+        <cbc:RegistrationName>DISTRIBUIDORA EL ÑANDÚ S.A.C.</cbc:RegistrationName>
+        <cac:RegistrationAddress>
+          <cac:AddressLine>
+            <cbc:Line>Jr. Huánuco 789, Tingo María</cbc:Line>
+          </cac:AddressLine>
+          <cac:Country>
+            <cbc:IdentificationCode>PE</cbc:IdentificationCode>
+          </cac:Country>
+        </cac:RegistrationAddress>
+      </cac:PartyLegalEntity>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:PaymentTerms>
+    <cbc:ID>FormaPago</cbc:ID>
+    <cbc:PaymentMeansID>Credito</cbc:PaymentMeansID>
+    <cbc:Amount currencyID="PEN">971.14</cbc:Amount>
+  </cac:PaymentTerms>
+  <cac:PaymentTerms>
+    <cbc:ID>FormaPago</cbc:ID>
+    <cbc:PaymentMeansID>Cuota001</cbc:PaymentMeansID>
+    <cbc:Amount currencyID="PEN">485.57</cbc:Amount>
+    <cbc:PaymentDueDate>2026-12-12</cbc:PaymentDueDate>
+  </cac:PaymentTerms>
+  <cac:PaymentTerms>
+    <cbc:ID>FormaPago</cbc:ID>
+    <cbc:PaymentMeansID>Cuota002</cbc:PaymentMeansID>
+    <cbc:Amount currencyID="PEN">485.57</cbc:Amount>
+    <cbc:PaymentDueDate>2027-01-11</cbc:PaymentDueDate>
+  </cac:PaymentTerms>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="PEN">148.14</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="PEN">823.00</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="PEN">148.14</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <cac:TaxScheme>
+          <cbc:ID>1000</cbc:ID>
+          <cbc:Name>IGV</cbc:Name>
+          <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+        </cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="PEN">823.00</cbc:LineExtensionAmount>
+    <cbc:TaxInclusiveAmount currencyID="PEN">971.14</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="PEN">971.14</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="NIU" unitCodeListID="UN/ECE rec 20">4</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="PEN">480.00</cbc:LineExtensionAmount>
+    <cac:PricingReference>
+      <cac:AlternativeConditionPrice>
+        <cbc:PriceAmount currencyID="PEN">141.60</cbc:PriceAmount>
+        <cbc:PriceTypeCode listAgencyName="PE:SUNAT" listName="Tipo de Precio" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16">01</cbc:PriceTypeCode>
+      </cac:AlternativeConditionPrice>
+    </cac:PricingReference>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="PEN">86.40</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="PEN">480.00</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="PEN">86.40</cbc:TaxAmount>
+        <cac:TaxCategory>
+          <cbc:Percent>18</cbc:Percent>
+          <cbc:TaxExemptionReasonCode listAgencyName="PE:SUNAT" listName="Afectacion del IGV" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07">10</cbc:TaxExemptionReasonCode>
+          <cac:TaxScheme>
+            <cbc:ID>1000</cbc:ID>
+            <cbc:Name>IGV</cbc:Name>
+            <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+          </cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description>Azúcar rubia saco 50 kg</cbc:Description>
+      <cac:SellersItemIdentification>
+        <cbc:ID>AZU-50</cbc:ID>
+      </cac:SellersItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="PEN">120.00</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>2</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="NIU" unitCodeListID="UN/ECE rec 20">40</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="PEN">88.00</cbc:LineExtensionAmount>
+    <cac:PricingReference>
+      <cac:AlternativeConditionPrice>
+        <cbc:PriceAmount currencyID="PEN">2.596</cbc:PriceAmount>
+        <cbc:PriceTypeCode listAgencyName="PE:SUNAT" listName="Tipo de Precio" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16">01</cbc:PriceTypeCode>
+      </cac:AlternativeConditionPrice>
+    </cac:PricingReference>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="PEN">15.84</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="PEN">88.00</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="PEN">15.84</cbc:TaxAmount>
+        <cac:TaxCategory>
+          <cbc:Percent>18</cbc:Percent>
+          <cbc:TaxExemptionReasonCode listAgencyName="PE:SUNAT" listName="Afectacion del IGV" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07">10</cbc:TaxExemptionReasonCode>
+          <cac:TaxScheme>
+            <cbc:ID>1000</cbc:ID>
+            <cbc:Name>IGV</cbc:Name>
+            <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+          </cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description>Fideo spaghetti paquete 500 g</cbc:Description>
+      <cac:SellersItemIdentification>
+        <cbc:ID>FID-500</cbc:ID>
+      </cac:SellersItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="PEN">2.20</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+  <cac:InvoiceLine>
+    <cbc:ID>3</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="NIU" unitCodeListID="UN/ECE rec 20">3</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="PEN">255.00</cbc:LineExtensionAmount>
+    <cac:PricingReference>
+      <cac:AlternativeConditionPrice>
+        <cbc:PriceAmount currencyID="PEN">100.30</cbc:PriceAmount>
+        <cbc:PriceTypeCode listAgencyName="PE:SUNAT" listName="Tipo de Precio" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16">01</cbc:PriceTypeCode>
+      </cac:AlternativeConditionPrice>
+    </cac:PricingReference>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="PEN">45.90</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="PEN">255.00</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="PEN">45.90</cbc:TaxAmount>
+        <cac:TaxCategory>
+          <cbc:Percent>18</cbc:Percent>
+          <cbc:TaxExemptionReasonCode listAgencyName="PE:SUNAT" listName="Afectacion del IGV" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07">10</cbc:TaxExemptionReasonCode>
+          <cac:TaxScheme>
+            <cbc:ID>1000</cbc:ID>
+            <cbc:Name>IGV</cbc:Name>
+            <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+          </cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description>Aceite vegetal caja 12 × 1 L</cbc:Description>
+      <cac:SellersItemIdentification>
+        <cbc:ID>ACE-12L</cbc:ID>
+      </cac:SellersItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="PEN">85.00</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+</Invoice>

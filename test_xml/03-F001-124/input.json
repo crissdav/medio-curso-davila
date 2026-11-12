@@ -1,0 +1,101 @@
+{
+  "documentType": "01",
+  "series": "F001",
+  "sequenceNumber": 124,
+  "number": "F001-00000124",
+  "operationType": "0101",
+  "issueDate": "2026-11-12",
+  "issueTime": "11:00:00",
+  "currency": "PEN",
+  "issuer": {
+    "ruc": "20123456786",
+    "legalName": "ABC SOFTWARE CORP S.A.C.",
+    "tradeName": "ABC ABARROTES",
+    "establishment": "0000"
+  },
+  "customer": {
+    "documentType": "6",
+    "documentNumber": "20609876540",
+    "legalName": "DISTRIBUIDORA EL ÑANDÚ S.A.C.",
+    "address": "Jr. Huánuco 789, Tingo María"
+  },
+  "items": [
+    {
+      "lineNumber": 1,
+      "productCode": "AZU-50",
+      "description": "Azúcar rubia saco 50 kg",
+      "quantity": "4",
+      "unitOfMeasure": "NIU",
+      "unitValue": "120.00",
+      "igvAffectation": "10",
+      "unitPrice": "141.60",
+      "saleValue": "480.00",
+      "iscBase": "0.00",
+      "iscAmount": "0.00",
+      "igvBase": "480.00",
+      "igvRate": "0.18",
+      "igv": "86.40",
+      "icbper": "0.00",
+      "totalTaxes": "86.40"
+    },
+    {
+      "lineNumber": 2,
+      "productCode": "FID-500",
+      "description": "Fideo spaghetti paquete 500 g",
+      "quantity": "40",
+      "unitOfMeasure": "NIU",
+      "unitValue": "2.20",
+      "igvAffectation": "10",
+      "unitPrice": "2.596",
+      "saleValue": "88.00",
+      "iscBase": "0.00",
+      "iscAmount": "0.00",
+      "igvBase": "88.00",
+      "igvRate": "0.18",
+      "igv": "15.84",
+      "icbper": "0.00",
+      "totalTaxes": "15.84"
+    },
+    {
+      "lineNumber": 3,
+      "productCode": "ACE-12L",
+      "description": "Aceite vegetal caja 12 × 1 L",
+      "quantity": "3",
+      "unitOfMeasure": "NIU",
+      "unitValue": "85.00",
+      "igvAffectation": "10",
+      "unitPrice": "100.30",
+      "saleValue": "255.00",
+      "iscBase": "0.00",
+      "iscAmount": "0.00",
+      "igvBase": "255.00",
+      "igvRate": "0.18",
+      "igv": "45.90",
+      "icbper": "0.00",
+      "totalTaxes": "45.90"
+    }
+  ],
+  "paymentTerms": {
+    "type": "Credito",
+    "pendingAmount": "971.14",
+    "installments": [
+      { "amount": "485.57", "dueDate": "2026-12-12" },
+      { "amount": "485.57", "dueDate": "2027-01-11" }
+    ]
+  },
+  "totals": {
+    "taxedTotal": "823.00",
+    "exemptTotal": "0.00",
+    "unaffectedTotal": "0.00",
+    "freeTotal": "0.00",
+    "iscTotal": "0.00",
+    "igvTotal": "148.14",
+    "icbperTotal": "0.00",
+    "taxTotal": "148.14",
+    "saleValueTotal": "823.00",
+    "salePriceTotal": "971.14",
+    "discountTotal": "0.00",
+    "payableAmount": "971.14",
+    "amountInWords": "NOVECIENTOS SETENTA Y UNO CON 14/100 SOLES"
+  }
+}
