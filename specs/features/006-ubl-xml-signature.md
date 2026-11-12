@@ -20,7 +20,7 @@ with XMLDSig.
 | R-06 | `cac:Signature` with the signature ID, issuer RUC and legal name. |
 | R-07 | The `DigestValue` is stored as `documentHash` and printed on the printed representation. |
 | R-08 | File name: `{RUC}-{TYPE}-{SERIES}-{NUMBER}.xml`, compressed into a `.zip` with the same name. |
-| R-09 | UTF-8 encoding (ISO-8859-1 accepted by SUNAT); special characters escaped. |
+| R-09 | ISO-8859-1 encoding, as SUNAT requires; characters outside Latin-1 are written as numeric references (`&#8364;`); special characters escaped. |
 | R-10 | The signed XML and the CDR are kept for the legal retention period. |
 
 ## Acceptance criteria
@@ -29,7 +29,7 @@ with XMLDSig.
 - **AC-3:** Given an expired certificate, then signing is rejected with a configuration error and the document does not move past `DRAFT`.
 
 ## Implementation
-The invoice (01 and 03) is implemented in [invoice_generator.py](../../src/abc_invoicing/adapters/ubl/invoice_generator.py) with tests in [test_invoice_generation.py](../../tests/test_invoice_generation.py). R-05 (signing), R-08 (ZIP file) and the `CreditNote` and `DebitNote` roots are not implemented yet. Phase 2 codes (operation types other than 0101, affectations 17 and 40) are rejected by the domain (SPEC-011 R-03).
+The invoice (01 and 03) is implemented in [invoice_generator.py](../../src/abc_invoicing/adapters/ubl/invoice_generator.py) with tests in [test_invoice_generation.py](../../tests/test_invoice_generation.py). R-05 (signing) is implemented in [xml_signer.py](../../src/abc_invoicing/adapters/signature/xml_signer.py) (RSA-SHA256, inclusive C14N 1.0) with tests in [test_xml_signature.py](../../tests/test_xml_signature.py), covering AC-2 and AC-3. R-08 (ZIP file) and the `CreditNote` and `DebitNote` roots are not implemented yet. Phase 2 codes (operation types other than 0101, affectations 17 and 40) are rejected by the domain (SPEC-011 R-03).
 
 ## References
 - SUNAT sample XML and XSD validation: [specs/ref/](../ref/README.md)

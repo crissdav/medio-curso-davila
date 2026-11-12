@@ -3,7 +3,7 @@ name = "abc-invoicing"
 version = "0.1.0"
 description = "UBL 2.1 invoice XML generation with the SUNAT (Peru) customization."
 requires-python = ">=3.10"
-dependencies = ["xsdata==24.11", "lxml==5.3.0"]
+dependencies = ["xsdata==24.11", "lxml==5.3.0", "signxml==5.3.0", "cryptography==50.0.2"]
 
 [project.optional-dependencies]
 dev = ["pytest==8.3.3", "xsdata[cli]==24.11"]
