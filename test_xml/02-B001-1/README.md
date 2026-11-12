@@ -32,11 +32,11 @@ Taxed 37.08 + exempt 7.50 = 44.58 · IGV 6.67 (37.08 × 18 %) · ICBPER 0.50 · 
 ## Files
 
 - [input.json](input.json): input data, in the same format as `specs/schemas/examples/invoice-response.json`.
-- [invoice.xml](invoice.xml): generated and signed XML.
-- `cdr-ose.xml`: pending, the OSE response (saved in ISO-8859-1).
+- [20123456786-03-B001-00000001.xml](20123456786-03-B001-00000001.xml): generated and signed XML.
+- `R-20123456786-03-B001-00000001.xml`: pending, the CDR (saved in ISO-8859-1).
 
 ```bash
-python -m abc_invoicing test_xml/02-B001-1/input.json tests/fixtures/company.json -o test_xml/02-B001-1/invoice.xml --cert certificado-prueba.pfx --password 123456
+python -m abc_invoicing test_xml/02-B001-1/input.json tests/fixtures/company.json -d test_xml/02-B001-1 --cert certificado-prueba.pfx --password 123456
 python test_xml/verify.py --cert certificado-prueba.pfx --password 123456
 ```
 

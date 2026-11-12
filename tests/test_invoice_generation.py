@@ -424,3 +424,20 @@ def test_generator_uses_classes_generated_from_the_xsd(company, invoice_dto):
     built = UblInvoiceGenerator().build(invoice_from_dto(invoice_dto, company))
     assert isinstance(built, generated.Invoice)
     assert built.Meta.namespace == "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+
+
+# ---------- File name (SPEC-006 R-08) ----------
+
+@pytest.mark.parametrize(
+    ("changes", "expected"),
+    [
+        ({}, "20123456786-01-F001-00000123.xml"),
+        ({"documentType": "03", "series": "B001", "sequenceNumber": 1,
+          "customer": {"documentType": "1", "documentNumber": "45781236", "legalName": "ANA TORRES"}},
+         "20123456786-03-B001-00000001.xml"),
+        ({"sequenceNumber": 99_999_999}, "20123456786-01-F001-99999999.xml"),
+    ],
+)
+def test_sunat_file_name(company, invoice_dto, changes, expected):
+    invoice = invoice_from_dto(invoice_dto | changes, company)
+    assert invoice.file_name == expected  # {RUC}-{TYPE}-{SERIES}-{NUMBER}.xml

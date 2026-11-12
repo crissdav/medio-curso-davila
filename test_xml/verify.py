@@ -2,9 +2,10 @@
 
 python test_xml/verify.py [--cert certificado-prueba.pfx --password 123456]
 
-- invoice.xml: XSD + signature, verified against the project certificate when --cert is given,
-  otherwise against the certificate embedded in the XML.
-- cdr*.xml: signature of the OSE/SUNAT, verified against the certificate embedded in the CDR.
+- {RUC}-{TYPE}-{SERIES}-{NUMBER}.xml (Invoice): SUNAT file name (SPEC-006 R-08), XSD and signature, verified
+  against the project certificate when --cert is given, otherwise against the one embedded in the XML.
+- R-{RUC}-...xml (CDR, ApplicationResponse): signature of the OSE/SUNAT, verified against the certificate
+  embedded in the CDR.
 """
 from __future__ import annotations
 
@@ -24,6 +25,17 @@ from abc_invoicing.adapters.ubl.xsd_validator import validate_invoice  # noqa: E
 
 DS = {"ds": "http://www.w3.org/2000/09/xmldsig#"}
 ENCODING = "ISO-8859-1"
+INVOICE_NS = "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+CBC = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+
+
+def sunat_file_name(root: etree._Element) -> str:
+    """Expected name from the XML content: {RUC}-{TYPE}-{SERIES}-{NUMBER:08}.xml."""
+    ns = {"cbc": CBC, "cac": "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"}
+    ruc = root.xpath("cac:AccountingSupplierParty/cac:Party/cac:PartyIdentification/cbc:ID/text()", namespaces=ns)[0]
+    doc_type = root.xpath("cbc:InvoiceTypeCode/text()", namespaces=ns)[0]
+    series, number = root.xpath("cbc:ID/text()", namespaces=ns)[0].split("-")
+    return f"{ruc}-{doc_type}-{series}-{int(number):08d}.xml"
 
 
 def embedded_certificate(data: bytes) -> x509.Certificate:
@@ -36,16 +48,20 @@ def embedded_certificate(data: bytes) -> x509.Certificate:
 def check(path: Path, own_cert: x509.Certificate | None) -> list[str]:
     data = path.read_bytes()
     errors = []
-    encoding = etree.fromstring(data).getroottree().docinfo.encoding
+    root = etree.fromstring(data)
+    is_invoice = root.tag == f"{{{INVOICE_NS}}}Invoice"
+    encoding = root.getroottree().docinfo.encoding
     if encoding.upper() != ENCODING:
         errors.append(f"encoding {encoding}, expected {ENCODING}")
-    if path.name == "invoice.xml":
+    if is_invoice:
+        if path.name != sunat_file_name(root):
+            errors.append(f"file name should be {sunat_file_name(root)} (SPEC-006 R-08)")
         try:
             validate_invoice(data)
         except ValueError as exc:
             errors.append(f"XSD: {exc}")
     try:
-        cert = own_cert if (own_cert and path.name == "invoice.xml") else embedded_certificate(data)
+        cert = own_cert if (own_cert and is_invoice) else embedded_certificate(data)
         XMLVerifier().verify(data, x509_cert=cert)
         signer = cert.subject.get_attributes_for_oid(x509.NameOID.ORGANIZATION_NAME)
         print(f"    signature OK ({signer[0].value if signer else cert.subject.rfc4514_string()})")
@@ -56,7 +72,7 @@ def check(path: Path, own_cert: x509.Certificate | None) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--cert", type=Path, help="Project certificate (.pfx) that must have signed invoice.xml")
+    parser.add_argument("--cert", type=Path, help="Project certificate (.pfx) that must have signed the invoices")
     parser.add_argument("--password")
     args = parser.parse_args()
     own = None

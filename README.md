@@ -22,7 +22,7 @@ python -m venv .venv
 .venv\Scripts\activate          # Linux / macOS: source .venv/bin/activate
 pip install -e ".[dev]"
 
-python -m pytest                # 72 tests: XML generation and signature
+python -m pytest                # 75 tests: XML generation, signature and file name
 ```
 
 To generate, sign and test an XML, see the next section.
@@ -67,25 +67,36 @@ The company data (RUC, legal name, address) comes from [company.json](tests/fixt
 ### 3. Generate and sign
 
 ```bash
-python -m abc_invoicing <input.json> tests/fixtures/company.json -o <output.xml> --cert certificado-prueba.pfx --password 123456
+python -m abc_invoicing <input.json> tests/fixtures/company.json -d <folder> --cert certificado-prueba.pfx --password 123456
 ```
 
-Without `--cert` the XML is not signed, and SUNAT and the OSE reject it with error 0306 (`ext:ExtensionContent` is
+With `-d` the file is written in that folder with the **name SUNAT requires** (SPEC-006 R-08):
+
+```text
+{RUC}-{TYPE}-{SERIES}-{NUMBER}.xml      number padded with zeros to 8 digits
+20123456786-01-F001-00000123.xml        invoice F001-123
+20123456786-03-B001-00000001.xml        sales receipt B001-1
+R-20123456786-01-F001-00000123.xml      CDR returned by SUNAT/OSE for that invoice
+```
+
+`-o <file>` writes to any name instead, for quick tests only. Without `--cert` the XML is not signed, and SUNAT and the OSE reject it with error 0306 (`ext:ExtensionContent` is
 empty). The password can also be passed in the `ABC_CERT_PASSWORD` variable. If the package is not installed, prefix
 the command with `PYTHONPATH=src` (PowerShell: `$env:PYTHONPATH="src";`).
 
 ### 4. Save it as a test and verify it
 
 Each submission is kept in its own folder in [test_xml/](test_xml/): `NN-SERIES-NUMBER/` with `input.json`,
-`invoice.xml`, the CDR returned by the OSE or SUNAT, and a `README.md` with the result.
+the signed XML and the CDR returned by the OSE or SUNAT, both with the SUNAT file name, and a `README.md` with the
+result.
 
 ```bash
-python -m abc_invoicing test_xml/02-B001-1/input.json tests/fixtures/company.json -o test_xml/02-B001-1/invoice.xml --cert certificado-prueba.pfx --password 123456
+python -m abc_invoicing test_xml/02-B001-1/input.json tests/fixtures/company.json -d test_xml/02-B001-1 --cert certificado-prueba.pfx --password 123456
 python test_xml/verify.py --cert certificado-prueba.pfx --password 123456
 ```
 
 [verify.py](test_xml/verify.py) checks every test folder: ISO-8859-1 encoding, XSD, the project signature on
-`invoice.xml` and the OSE/SUNAT signature on each CDR. Changing any signed value makes it fail.
+each invoice and the OSE/SUNAT signature on each CDR, and that each invoice has its SUNAT file name. Changing any signed
+value makes it fail.
 
 ### 5. Send it to the OSE-DEMO
 

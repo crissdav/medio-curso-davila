@@ -29,7 +29,7 @@ with XMLDSig.
 - **AC-3:** Given an expired certificate, then signing is rejected with a configuration error and the document does not move past `DRAFT`.
 
 ## Implementation
-The invoice (01 and 03) is implemented in [invoice_generator.py](../../src/abc_invoicing/adapters/ubl/invoice_generator.py) with tests in [test_invoice_generation.py](../../tests/test_invoice_generation.py). R-05 (signing) is implemented in [xml_signer.py](../../src/abc_invoicing/adapters/signature/xml_signer.py) (RSA-SHA256, inclusive C14N 1.0) with tests in [test_xml_signature.py](../../tests/test_xml_signature.py), covering AC-2 and AC-3. R-08 (ZIP file) and the `CreditNote` and `DebitNote` roots are not implemented yet. Phase 2 codes (operation types other than 0101, affectations 17 and 40) are rejected by the domain (SPEC-011 R-03).
+The invoice (01 and 03) is implemented in [invoice_generator.py](../../src/abc_invoicing/adapters/ubl/invoice_generator.py) with tests in [test_invoice_generation.py](../../tests/test_invoice_generation.py). R-05 (signing) is implemented in [xml_signer.py](../../src/abc_invoicing/adapters/signature/xml_signer.py) (RSA-SHA256, inclusive C14N 1.0) with tests in [test_xml_signature.py](../../tests/test_xml_signature.py), covering AC-2 and AC-3. R-08: the SUNAT file name is implemented (`Invoice.file_name`, CLI option `-d`); the ZIP file and the `CreditNote` and `DebitNote` roots are not implemented yet. Phase 2 codes (operation types other than 0101, affectations 17 and 40) are rejected by the domain (SPEC-011 R-03).
 
 ## References
 - SUNAT sample XML and XSD validation: [specs/ref/](../ref/README.md)

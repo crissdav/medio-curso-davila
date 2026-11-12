@@ -193,3 +193,11 @@ class Invoice:
     def number(self) -> str:
         """Series and number as they go in cbc:ID (T-05)."""
         return f"{self.series}-{self.sequence_number}"
+
+    @property
+    def file_name(self) -> str:
+        """SPEC-006 R-08: {RUC}-{TYPE}-{SERIES}-{NUMBER}.xml, number padded to 8 digits.
+
+        20123456786-01-F001-00000123.xml. The CDR returned by SUNAT/OSE uses the same name with "R-".
+        """
+        return f"{self.issuer.ruc}-{self.document_type}-{self.series}-{self.sequence_number:08d}.xml"
