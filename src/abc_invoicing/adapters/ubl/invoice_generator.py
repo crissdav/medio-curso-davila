@@ -100,17 +100,23 @@ def _party_id(document_type: str, number: str) -> ubl.PartyIdentification:
     )
 
 
+XML_ENCODING = "ISO-8859-1"
+
+
 class UblInvoiceGenerator:
     """Implements UblGeneratorPort. The XML is checked against the XSD before it is returned."""
 
     def __init__(self, signature_id: str = "SIGN-ABC") -> None:
         self._signature_id = signature_id
-        self._serializer = XmlSerializer(config=SerializerConfig(indent="  "))
+        self._serializer = XmlSerializer(
+            config=SerializerConfig(encoding=XML_ENCODING, indent="  ")
+        )
 
     def generate(self, invoice: Invoice) -> bytes:
+        # SPEC-006 R-09: ISO-8859-1. Characters outside Latin-1 become numeric references (&#8364;).
         xml = self._serializer.render(
             self.build(invoice), ns_map=NAMESPACES
-        ).encode("utf-8")
+        ).encode(XML_ENCODING, errors="xmlcharrefreplace")
         validate_invoice(xml)
         return xml
 
@@ -441,6 +447,19 @@ def _line_discount(
     ]
 
 
+def _isc_percent(line: DocumentLine) -> Decimal:
+    """T-52: SUNAT requires cbc:Percent on every line tax except ICBPER (error 2992).
+
+    Systems 01 and 03 have a rate. System 02 (fixed amount) has none, so the effective rate
+    iscAmount / iscBase is reported: 14.88 / 48.00 → 31.
+    """
+    if line.isc.rate is not None:
+        return _percent(line.isc.rate)
+    if not line.isc_base:
+        return Decimal(0)
+    return _percent((line.isc_amount / line.isc_base).quantize(Decimal("0.0000001")))
+
+
 def _line_tax_total(line: DocumentLine, currency: str) -> ubl.TaxTotal:
     subtotals = []
     if (
@@ -455,9 +474,7 @@ def _line_tax_total(line: DocumentLine, currency: str) -> ubl.TaxTotal:
                     value=line.isc_amount, currency_id=currency
                 ),
                 tax_category=ubl.TaxCategory(
-                    percent=ubl.Percent(value=_percent(line.isc.rate))
-                    if line.isc.rate is not None
-                    else None,
+                    percent=ubl.Percent(value=_isc_percent(line)),
                     tier_range=ubl.TierRange(value=line.isc.system),
                     tax_scheme=_tax_scheme(ISC_TAX),
                 ),

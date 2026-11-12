@@ -56,11 +56,19 @@ def test_generated_xml_complies_with_the_official_xsd(generate, invoice_dto):
     validate_invoice(generate(invoice_dto).raw)
 
 
-def test_is_utf8_with_xml_declaration_and_named_prefixes(generate, invoice_dto):
+def test_is_iso_8859_1_with_xml_declaration_and_named_prefixes(generate, invoice_dto):
     raw = generate(invoice_dto).raw
-    assert raw.startswith(b'<?xml version="1.0" encoding="UTF-8"?>')
+    assert raw.startswith(b'<?xml version="1.0" encoding="ISO-8859-1"?>')
     assert b"<cbc:ID>" in raw and b"<cac:Signature>" in raw and b"ns0:" not in raw
-    assert "Tingo María".encode("utf-8") in raw
+    assert "Tingo María".encode("iso-8859-1") in raw
+    assert "Tingo María".encode("utf-8") not in raw
+
+
+def test_characters_outside_latin1_become_numeric_references(generate, invoice_dto):
+    invoice_dto["customer"]["legalName"] = "CAFÉ € “ÑANDÚ”"
+    xml = generate(invoice_dto)
+    assert b"CAF\xc9 &#8364; &#8220;\xd1AND\xda&#8221;" in xml.raw
+    assert "CAFÉ € “ÑANDÚ”" in etree.tostring(xml.root, encoding="unicode")
 
 
 def test_xsd_rejects_a_broken_document(generate, invoice_dto):
@@ -147,7 +155,7 @@ def test_customer_identified_according_to_catalog_06(generate, invoice_dto):
 def test_special_characters_are_escaped(generate, invoice_dto):
     invoice_dto["customer"]["legalName"] = "PEÑA & HIJOS <S.A.C.>"
     xml = generate(invoice_dto)
-    assert b"PE\xc3\x91A &amp; HIJOS &lt;S.A.C.&gt;" in xml.raw
+    assert b"PE\xd1A &amp; HIJOS &lt;S.A.C.&gt;" in xml.raw
     assert xml.text("//cac:AccountingCustomerParty//cbc:RegistrationName") == "PEÑA & HIJOS <S.A.C.>"
 
 
@@ -235,7 +243,8 @@ def test_isc_fixed_amount_system(generate, invoice_dto):
     isc = tax_subtotal(BEER_LINE, "2000")
     assert xml.text(f"{isc}/cac:TaxCategory/cbc:TierRange") == "02"  # T-51, catalog 08
     assert xml.text(f"{isc}/cbc:TaxAmount") == "14.88"  # T-52: 12 × 0.62 L × S/ 2.00
-    assert xml.all(f"{isc}/cac:TaxCategory/cbc:Percent") == []
+    # SUNAT error 2992: the rate is mandatory; system 02 reports the effective rate 14.88 / 48.00.
+    assert xml.text(f"{isc}/cac:TaxCategory/cbc:Percent") == "31"
     assert xml.text(tax_subtotal(BEER_LINE, "1000") + "/cbc:TaxableAmount") == "62.88"  # ISC is part of the IGV base.
 
 

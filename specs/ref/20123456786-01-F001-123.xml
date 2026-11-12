@@ -161,6 +161,7 @@
         <cbc:TaxableAmount currencyID="PEN">48.00</cbc:TaxableAmount>
         <cbc:TaxAmount currencyID="PEN">14.88</cbc:TaxAmount>
         <cac:TaxCategory>
+          <cbc:Percent>31</cbc:Percent>
           <cbc:TierRange>02</cbc:TierRange>
           <cac:TaxScheme><cbc:ID>2000</cbc:ID><cbc:Name>ISC</cbc:Name><cbc:TaxTypeCode>EXC</cbc:TaxTypeCode></cac:TaxScheme>
         </cac:TaxCategory>
