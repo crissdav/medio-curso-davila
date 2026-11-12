@@ -10,7 +10,8 @@ the code then implements them.
 |---|---|---|
 | Midterm exam | Specifications: domain model, architecture, API contracts and traceability matrix | Done, with the instructor's feedback applied |
 | Second partial | Generation of the XML from the `UBL-Invoice-2.1.xsd` schema, with unit tests | Done |
-| Later | Signing, submission to SUNAT/OSE, API and client apps | Specified, not implemented |
+| Signature | XMLDSig signature with a .pfx certificate (SPEC-006 R-05) | Done |
+| Later | Submission to SUNAT/OSE, API and client apps | Specified, not implemented |
 
 ## Quick start
 
@@ -21,9 +22,95 @@ python -m venv .venv
 .venv\Scripts\activate          # Linux / macOS: source .venv/bin/activate
 pip install -e ".[dev]"
 
-python -m pytest                # 60 XML generation tests
-python -m abc_invoicing specs/schemas/examples/invoice-response.json tests/fixtures/company.json -o invoice.xml
+python -m pytest                # 72 tests: XML generation and signature
 ```
+
+To generate, sign and test an XML, see the next section.
+
+## How to generate an XML
+
+The generator turns a JSON document into a UBL 2.1 XML, validates it against the official XSD, signs it and writes it
+in **ISO-8859-1**, the encoding SUNAT requires.
+
+```text
+input.json + company.json → generator → XSD check → XMLDSig signature (.pfx) → XML in ISO-8859-1
+```
+
+### 1. Create the test certificate (once)
+
+```bash
+python -m abc_invoicing.adapters.signature.test_certificate -o certificado-prueba.pfx --password 123456
+```
+
+It is self-signed and has **no legal value**; it is valid for one year. Real documents need a certificate from an
+INDECOPI-accredited provider. `.pfx` and `.p12` files are in `.gitignore`: a private key must never be committed.
+
+### 2. Write the input JSON
+
+Copy [invoice-response.json](specs/schemas/examples/invoice-response.json) (invoice) or
+[test_xml/02-B001-1/input.json](test_xml/02-B001-1/input.json) (sales receipt) and change the data. The generator does
+not calculate taxes: the amounts must already be calculated and must add up, or the domain rejects the document.
+
+| Field | Values |
+|---|---|
+| `documentType` / `series` | `01` invoice with an `F` series (`F001`); `03` sales receipt with a `B` series (`B001`) |
+| `customer.documentType` | `6` RUC (required on invoices, check digit validated), `1` DNI, `-` anonymous (receipts below S/ 700) |
+| `items[].igvAffectation` | `10` taxed, `20` exempt, `30` unaffected, `11`–`16`, `21`, `31`–`37` free of charge (catalog 07) |
+| `items[].unitOfMeasure` | Catalog 03, such as `NIU` (unit) or `KGM` (kilogram) |
+| `items[].isc` | Optional: `system` `01` (`rate`), `02` (`fixedAmount`, `unitConversionFactor`) or `03` (catalog 08) |
+| `items[].icbperBagCount` | Number of plastic bags (S/ 0.50 each) |
+| `paymentTerms.type` | `Contado` (cash) or `Credito` (credit, with installments) |
+| `totals` | `taxedTotal + exemptTotal + unaffectedTotal = saleValueTotal`; `saleValueTotal + taxTotal − discountTotal = payableAmount` |
+
+The company data (RUC, legal name, address) comes from [company.json](tests/fixtures/company.json).
+
+### 3. Generate and sign
+
+```bash
+python -m abc_invoicing <input.json> tests/fixtures/company.json -o <output.xml> --cert certificado-prueba.pfx --password 123456
+```
+
+Without `--cert` the XML is not signed, and SUNAT and the OSE reject it with error 0306 (`ext:ExtensionContent` is
+empty). The password can also be passed in the `ABC_CERT_PASSWORD` variable. If the package is not installed, prefix
+the command with `PYTHONPATH=src` (PowerShell: `$env:PYTHONPATH="src";`).
+
+### 4. Save it as a test and verify it
+
+Each submission is kept in its own folder in [test_xml/](test_xml/): `NN-SERIES-NUMBER/` with `input.json`,
+`invoice.xml`, the CDR returned by the OSE or SUNAT, and a `README.md` with the result.
+
+```bash
+python -m abc_invoicing test_xml/02-B001-1/input.json tests/fixtures/company.json -o test_xml/02-B001-1/invoice.xml --cert certificado-prueba.pfx --password 123456
+python test_xml/verify.py --cert certificado-prueba.pfx --password 123456
+```
+
+[verify.py](test_xml/verify.py) checks every test folder: ISO-8859-1 encoding, XSD, the project signature on
+`invoice.xml` and the OSE/SUNAT signature on each CDR. Changing any signed value makes it fail.
+
+### 5. Send it to the OSE-DEMO
+
+The XML can be tested at [probar-xml.nubefact.com](https://probar-xml.nubefact.com):
+
+1. Choose **OSE** and press **Clean**.
+2. Leave **Firmar** unchecked to test the project signature, or check it so Nubefact signs with its demo certificate.
+3. **Drag the file** from the file explorer. Do not copy it from VS Code: VS Code opens it as UTF-8, shows `�`
+   instead of `á`, and pasting sends the damaged text. To copy, first reopen it with *Reopen with Encoding → Western
+   (ISO 8859-1)*.
+4. Do not press **BeautifyXML**: changing the whitespace breaks the signature.
+5. Press **ENVIAR** and save the response, converted to ISO-8859-1, as the CDR of the test.
+
+| CDR `ResponseCode` | Meaning |
+|---|---|
+| `0` | Accepted; any `StatusReasonCode` of 4000 or more is an observation, not a rejection |
+| `2000`–`3999` | Rejected; `Description` gives the reason |
+| `0100`–`1999` | Not processed (format or system error); the document can be sent again |
+
+| Error seen | Cause | Fix |
+|---|---|---|
+| 0306 `ExtensionContent` is not complete | Unsigned XML | Generate with `--cert`, or check **Firmar** |
+| 2992 no tax rate tag on the line | Missing `cbc:Percent` | Already fixed in the generator (ISC system 02) |
+| `JAXB unmarshalling exception` | Damaged characters (pasted from VS Code) | Drag the file instead |
+| 4013 customer RUC not active | Example RUC not in the SUNAT register | Observation only; use a real active RUC |
 
 ## 1. The problem
 
@@ -86,7 +173,7 @@ invoice-response.json → invoice_mapper → Invoice (domain) → UblInvoiceGene
 It generates invoices (01) and sales receipts (03) with taxed, exempt, unaffected and free-of-charge lines, ISC by catalog 08
 system, ICBPER, line discounts, cash or credit payment terms and foreign currency.
 
-The [60 tests](tests/test_invoice_generation.py) check that the generated XML equals the [reference invoice](specs/ref/20123456786-01-F001-123.xml)
+The [61 tests](tests/test_invoice_generation.py) check that the generated XML equals the [reference invoice](specs/ref/20123456786-01-F001-123.xml)
 element by element, complies with the XSD, reports each matrix row correctly and handles the other operations. They also
 reject invalid documents and confirm that the code's tax tables match the SUNAT catalogs.
 
@@ -108,8 +195,9 @@ purpose, to verify that they fail when they should.
 ## 4. Repository map
 
 ```text
-src/abc_invoicing/       XML generator: domain, application and UBL adapter
-tests/                   Unit tests of the XML generation
+src/abc_invoicing/       XML generator: domain, application, UBL adapter and signature adapter
+tests/                   Unit tests of the XML generation and signature
+test_xml/                Submissions to the OSE/SUNAT: input, signed XML, CDR and result per test; verify.py
 docs/                    Context, use cases, domain, architecture, API, matrix, migration and ADRs
 specs/features/          Functional specs (SPEC-001 … SPEC-013)
 specs/schemas/           JSON Schemas and validated examples
@@ -130,8 +218,8 @@ Start with [00-context](docs/00-context.md), which also has a glossary of the Pe
 
 ## 5. Limitations and next steps
 
-- **Not implemented:** digital signature, credit and debit notes, tax calculation (the generator receives calculated
-  amounts), IVAP and exports (rejected with an error), submission to SUNAT/OSE, the API and the client apps. The XML is unsigned, so it is not yet a valid tax document.
+- **Not implemented:** credit and debit notes, tax calculation (the generator receives calculated
+  amounts), IVAP and exports (rejected with an error), submission to SUNAT/OSE, the API and the client apps. The signature works, but a real tax document needs a certificate from an INDECOPI-accredited provider; the test certificate has no legal value.
 - **Backend language:** ADR-001 proposed a JVM backend and ADR-005 implemented this component in Python. The language of
   the rest of the backend must be confirmed before implementing it.
 - **To confirm against current regulations:** submission and voiding deadlines, the S/ 700 threshold, the S/ 0.50 ICBPER
