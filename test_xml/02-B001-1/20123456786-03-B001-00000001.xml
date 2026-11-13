@@ -2,7 +2,7 @@
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
   <ext:UBLExtensions>
     <ext:UBLExtension>
-      <ext:ExtensionContent><ds:Signature Id="SIGN-ABC"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><ds:Reference URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>QiQJNKW15lvXtjpQuhkPQHPRHCi8dLApYBKM3Y81CN4=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>DdfaXFYyrcJAYTjmaGDw9PgTQJcerqpJYzU/LLN+nCHWEoKRcO22q4n8WG8nusp5kNK5nyPjonxSu7MZY5Yo2nV0mo5h35cIf4eWBWVihc3vW2SYqRFhX1Go6XM+m4of23H3kuLqSoaeE6ZFRd4NEG5f+oP/e5Bo0cGZl8qvGNfzyHrD/lwEZDeNWsH7H76lIQx5f53t9HMV5mr5spG/LqYNsTEg0tdxnBsfbAdhjhVhFNtAzSZWH/lifiS+YzBi8DIe7tuTCnfVAnQ7pTZSN5ewPbHE1BiPVBOeMpijOdLkEv8x8UQuxvhijD9K3kr1H6Fa7pD0Qaeikxytv4EIRA==</ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIIDkjCCAnqgAwIBAgIUDpVdGCL+EQcPOMccv778YZqwHs0wDQYJKoZIhvcNAQEL
+      <ext:ExtensionContent><ds:Signature Id="SIGN-ABC"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><ds:Reference URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><ds:Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>o7mJVaCTN+HfG98ikZXlScGuuHTxT4Wz/RPH67L+CdQ=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>sWrQsGxqtUVtqDgxALBZHLEEBDhMciaWfC18i3iJ0EyV0X7yTHKYMUlHyYpLFUMI3j9bHo/smX/jvRd5rSJU48UTPe6iz2nErRjKmDbDnDBNIrpCCHkFaccGxes0Ey5F3wUvsUOfSC6+Ako4VaDpWk1T3Cprh92/OpZAj4+SitoJOqOqEO8BOtW3WPHRt86YzrRrK7J28CsJ1uVGIHhfIO8Ju2AL/DF19p9pLoFXQJLtcICHGGSel3SAGwYkNd6ATdCNXKIe2M/icgnYOGYZizdKni5PuUJOUQcsRNLAbEWKLV2UkiqWXYJsOFtine2oB15fM4Kk/rPgUgB9wmHjOQ==</ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIIDkjCCAnqgAwIBAgIUDpVdGCL+EQcPOMccv778YZqwHs0wDQYJKoZIhvcNAQEL
 BQAwcjELMAkGA1UEBhMCUEUxITAfBgNVBAoMGEFCQyBTT0ZUV0FSRSBDT1JQIFMu
 QS5DLjEUMBIGA1UEBRMLMjAxMjM0NTY3ODYxKjAoBgNVBAMMIUFCQyBTT0ZUV0FS
 RSBDT1JQIFMuQS5DLiAtIFBSVUVCQTAeFw0yNjExMTIxMzUyMDVaFw0yNzExMTIx
@@ -240,7 +240,7 @@ nZVj7UsP/TePI17d2lJLjs1oqBAgnBwtZ/4ox9IeUUQeupZ/JnHzZ0PELa/4QQV8
     <cbc:LineExtensionAmount currencyID="PEN">0.08</cbc:LineExtensionAmount>
     <cac:PricingReference>
       <cac:AlternativeConditionPrice>
-        <cbc:PriceAmount currencyID="PEN">0.10</cbc:PriceAmount>
+        <cbc:PriceAmount currencyID="PEN">0.09</cbc:PriceAmount>
         <cbc:PriceTypeCode listAgencyName="PE:SUNAT" listName="Tipo de Precio" listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16">01</cbc:PriceTypeCode>
       </cac:AlternativeConditionPrice>
     </cac:PricingReference>
