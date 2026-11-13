@@ -1,13 +1,44 @@
-node_modules/
-.cache/
-*.log
-.DS_Store
-*.docx
+# Python: virtual environment, bytecode, packaging and tool caches
 .venv/
 __pycache__/
-.pytest_cache/
+*.py[cod]
 *.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
-# Certificates (private keys): never commit them
+# Node: dependencies (restored with npm install)
+node_modules/
+
+# Official XSDs downloaded by scripts/ValidateXsd.java (npm run check:xsd)
+.cache/
+
+# Secrets: certificates, private keys and environment files. Never commit them.
 *.pfx
 *.p12
+*.pem
+*.key
+.env
+.env.*
+
+# Generated output in the repository root (python -m abc_invoicing -o file.xml).
+# Kept XML lives in test_xml/ (submission evidence) and specs/ref/ (reference samples).
+/*.xml
+/*.zip
+
+# Editors and operating systems
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs, temporary files and office documents
+*.log
+*.tmp
+~$*
+*.docx
