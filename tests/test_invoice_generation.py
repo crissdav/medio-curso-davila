@@ -441,3 +441,9 @@ def test_generator_uses_classes_generated_from_the_xsd(company, invoice_dto):
 def test_sunat_file_name(company, invoice_dto, changes, expected):
     invoice = invoice_from_dto(invoice_dto | changes, company)
     assert invoice.file_name == expected  # {RUC}-{TYPE}-{SERIES}-{NUMBER}.xml
+
+
+def test_icbper_bag_count_must_equal_the_line_quantity(company, invoice_dto):  # SUNAT error 3236
+    invoice_dto["items"][3]["icbperBagCount"] = 4  # The bag line has quantity 2.
+    with pytest.raises(DomainError, match="3236"):
+        invoice_from_dto(invoice_dto, company)

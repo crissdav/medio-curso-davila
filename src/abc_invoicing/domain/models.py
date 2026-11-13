@@ -49,12 +49,36 @@ class Issuer:
             raise DomainError(f"Invalid issuer RUC: {self.ruc}")
 
 
+# Catalog 06: format of the customer document number, with the message shown when it does not match.
+IDENTITY_DOCUMENT_RULES = {
+    "6": (re.compile(r"(10|15|16|17|20)[0-9]{9}"), "RUC: 11 digits starting with 10, 15, 16, 17 or 20"),
+    "1": (re.compile(r"[0-9]{8}"), "DNI: 8 digits"),
+    "4": (re.compile(r"[A-Za-z0-9]{1,12}"), "Foreigner ID card: up to 12 letters or digits"),
+    "7": (re.compile(r"[A-Za-z0-9]{1,12}"), "Passport: up to 12 letters or digits"),
+    "A": (re.compile(r"[A-Za-z0-9]{1,15}"), "Diplomatic ID card: up to 15 letters or digits"),
+    "0": (re.compile(r".{1,15}"), "Non-domiciled tax document: up to 15 characters"),
+    "-": (re.compile(r"-?"), "Varios: no document number"),
+}
+
+
 @dataclass(frozen=True)
 class Customer:
     document_type: str
     document_number: str
     legal_name: str
     address: str | None = None
+
+    def __post_init__(self) -> None:
+        rule = IDENTITY_DOCUMENT_RULES.get(self.document_type)
+        if rule is None:
+            raise DomainError(f"Identity document type not in catalog 06: {self.document_type}")
+        pattern, description = rule
+        if not pattern.fullmatch(self.document_number):
+            raise DomainError(f"Invalid customer document number '{self.document_number}': {description}")
+        if self.document_type == RUC_DOCUMENT and not is_valid_ruc(self.document_number):
+            raise DomainError(f"Invalid customer RUC '{self.document_number}': the check digit does not match")
+        if not self.legal_name.strip():
+            raise DomainError("The customer name is required")
 
 
 @dataclass(frozen=True)
@@ -166,6 +190,12 @@ class Invoice:
         for line in self.lines:
             if line.igv_affectation not in ONEROUS_AFFECTATIONS | FREE_AFFECTATIONS:
                 raise DomainError(f"IGV affectation not supported in phase 1: {line.igv_affectation}")
+            if line.icbper_bag_count and Decimal(line.icbper_bag_count) != line.quantity:
+                # SUNAT error 3236: cbc:BaseUnitMeasure must equal cbc:InvoicedQuantity.
+                raise DomainError(
+                    f"Line {line.line_number}: ICBPER applies to plastic bags, so the bag count "
+                    f"({line.icbper_bag_count}) must equal the quantity ({line.quantity}) (SUNAT 3236)"
+                )
         self._check_totals()
         if self.document_type == INVOICE:
             if not self.series.startswith("F"):
