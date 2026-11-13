@@ -27,7 +27,7 @@ exempt products, products with ISC and bags with ICBPER (see [00-context](../../
 | R-03 | `igvBase = saleValue + iscAmount` (ISC **is part** of the IGV base). |
 | R-04 | IGV according to catalog 07: codes `10`/`17` → `igv = round2(igvBase × igvRate)`; `20`, `30`, `40` → `igv = 0`. |
 | R-05 | If the line has `isc`, it must carry the parameter of the chosen system (01 → rate; 02 → fixedAmount; 03 → rate + retailPrice); otherwise `ISC_CONFIG_INCOMPLETE`. `unitConversionFactor` (default 1) converts the sale unit into the ISC unit: a 620 ml beer sold in `NIU` and taxed per litre uses 0.62. |
-| R-06 | `icbper = bagCount × currentIcbperAmount` (not part of the IGV base). |
+| R-06 | `icbper = bagCount × currentIcbperAmount` (not part of the IGV base). `bagCount` must equal the line quantity: SUNAT rejects a different `cbc:BaseUnitMeasure` with error 3236. |
 | R-07 | Free-of-charge operations (affectation 11–16, 21, 31–37): `unitValue` is 0 and the input is `referenceUnitValue`; `saleValue = quantity × referenceUnitValue`; `unitPrice` returns the reference value with catalog 16 code `02`; **not added to the total payable**; accumulated in `freeTotal` (tax 9996). |
 | R-08 | `unitPrice = (saleValue + iscAmount + igv) / quantity` (catalog 16 code `01`). |
 | R-09 | Totals: `taxedTotal = Σ saleValue (affectation 10, 17)`; `exemptTotal = Σ (20)`; `unaffectedTotal = Σ (30)`; `igvTotal = round2(Σ taxed igvBase × igvRate)`; `payableAmount = saleValueTotal + iscTotal + igvTotal + icbperTotal − globalDiscount`. The difference between Σ line IGV and the global IGV must not exceed ±1.00; otherwise → `TOTALS_MISMATCH`. |
@@ -57,3 +57,9 @@ Total payable = 296.17 + 23.04 + 57.46 + 1.00 = **377.67**.
 
 ## Contracts
 - `POST /taxes/calculations` · [line.schema.json](../schemas/line.schema.json) · `Totals` in [sales-document.schema.json](../schemas/sales-document.schema.json)
+
+## Implementation
+[tax_calculator.py](../../src/abc_invoicing/application/tax_calculator.py) applies R-01, R-03, R-04, R-06, R-08, R-09
+and R-10 for the web form: affectations 10, 20 and 30, ICBPER, cash or credit (credit installments split equally when
+no amount is given). AC-3 is covered in [test_web_form.py](../../tests/test_web_form.py). ISC (R-02, R-05), discounts
+and free-of-charge lines (R-07) are not calculated yet; the CLI still accepts them already calculated in the JSON input.
