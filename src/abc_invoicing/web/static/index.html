@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generador de XML SUNAT</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --surface: #ffffff; --surface-2: #f0f2f5; --border: #d9dde3;
+    --text: #1d232b; --muted: #5d6773; --accent: #0b6bcb; --accent-text: #ffffff;
+    --ok-bg: #e8f5ec; --ok: #1e7a3e; --err-bg: #fdecec; --err: #b42318; --warn-bg: #fff6e0; --warn: #8a5a00;
+    --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161b; --surface: #1a2027; --surface-2: #222a33; --border: #333d48;
+      --text: #e6e9ed; --muted: #9aa4af; --accent: #4a9eef; --accent-text: #0d1117;
+      --ok-bg: #133022; --ok: #6fd391; --err-bg: #3a1716; --err: #ff8f86; --warn-bg: #352a10; --warn: #f0c35a;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, "Segoe UI", sans-serif; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; }
+  header h1 { margin: 0; font-size: 19px; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; padding: 20px 24px 40px; max-width: 1400px; margin: 0 auto; }
+  @media (max-width: 1000px) { main { grid-template-columns: 1fr; padding: 16px; } }
+  section.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
+  section.card h2 { margin: 0 0 12px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+  .step { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-text); font-size: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px 14px; }
+  .grid .wide { grid-column: span 2; }
+  @media (max-width: 520px) { .grid .wide { grid-column: auto; } }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
+  input, select { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; min-width: 0; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  input.num { text-align: right; font-variant-numeric: tabular-nums; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .table-wrap { overflow-x: auto; }
+  .table-wrap table { min-width: 1120px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; padding: 6px 4px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 5px 4px; border-bottom: 1px solid var(--surface-2); vertical-align: middle; }
+  td input, td select { width: 100%; padding: 6px 7px; }
+  td.calc { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--muted); }
+  .col-code { width: 90px; } .col-unit { width: 120px; } .col-qty { width: 80px; } .col-val { width: 100px; }
+  .col-aff { width: 140px; } .col-bags { width: 74px; text-align: center; }
+  td.center { text-align: center; } td input[type=checkbox] { width: auto; } .col-x { width: 34px; }
+  td [data-f=description] { min-width: 220px; }
+  button { font: inherit; cursor: pointer; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); padding: 7px 12px; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; padding: 11px 16px; width: 100%; font-size: 15px; }
+  button.primary:disabled { opacity: .55; cursor: progress; }
+  button.icon { padding: 4px 8px; line-height: 1; }
+  .row-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .radios { display: flex; gap: 18px; margin-bottom: 10px; }
+  .radios label { flex-direction: row; align-items: center; gap: 6px; font-size: 14px; color: var(--text); }
+  .hint { color: var(--muted); font-size: 12.5px; margin: 6px 0 0; }
+  aside { position: sticky; top: 16px; align-self: start; }
+  @media (max-width: 1000px) { aside { position: static; } }
+  dl.totals { display: grid; grid-template-columns: 1fr auto; gap: 5px 10px; margin: 0; font-variant-numeric: tabular-nums; }
+  dl.totals dt { color: var(--muted); } dl.totals dd { margin: 0; text-align: right; }
+  dl.totals .grand { font-size: 18px; font-weight: 700; color: var(--text); padding-top: 6px; border-top: 1px solid var(--border); }
+  .words { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .msg { border-radius: 8px; padding: 10px 12px; font-size: 13.5px; margin-top: 12px; }
+  .msg.err { background: var(--err-bg); color: var(--err); }
+  .msg.ok { background: var(--ok-bg); color: var(--ok); }
+  .msg.warn { background: var(--warn-bg); color: var(--warn); }
+  .check { flex-direction: row; align-items: center; gap: 8px; color: var(--text); font-size: 14px; margin: 12px 0; }
+  .file { font-family: var(--mono); font-size: 13px; word-break: break-all; font-weight: 600; }
+  pre { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font: 12px/1.4 var(--mono); max-height: 420px; overflow: auto; white-space: pre; }
+  ol.tips { padding-left: 18px; margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+  .field-status { font-size: 12px; min-height: 16px; }
+  .field-status.ok { color: var(--ok); } .field-status.err { color: var(--err); }
+  input:disabled { opacity: .6; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Generador de comprobantes electrónicos</h1>
+  <p>UBL 2.1 · personalización SUNAT · XML firmado en ISO-8859-1, listo para validar en Nubefact u otro OSE</p>
+</header>
+
+<main>
+  <div>
+    <section class="card">
+      <h2><span class="step">1</span>Comprobante</h2>
+      <div class="grid">
+        <label>Tipo
+          <select id="documentType">
+            <option value="01">01 · Factura</option>
+            <option value="03">03 · Boleta de venta</option>
+          </select>
+        </label>
+        <label>Serie <input id="series" maxlength="4" value="F001" autocomplete="off"></label>
+        <label>Número <input id="sequenceNumber" class="num" type="number" min="1" max="99999999" value="1"></label>
+        <label>Fecha de emisión <input id="issueDate" type="date"></label>
+        <label>Hora <input id="issueTime" type="time" step="1"></label>
+        <label>Moneda
+          <select id="currency">
+            <option value="PEN">PEN · Soles</option>
+            <option value="USD">USD · Dólares</option>
+          </select>
+        </label>
+      </div>
+      <details>
+        <summary>Datos del emisor</summary>
+        <div class="grid">
+          <label>RUC <input id="issuerRuc" maxlength="11" inputmode="numeric"></label>
+          <label class="wide">Razón social <input id="issuerLegalName"></label>
+          <label>Nombre comercial <input id="issuerTradeName"></label>
+          <label class="wide">Dirección fiscal <input id="issuerAddress"></label>
+          <label>Ubigeo <input id="issuerUbigeo" maxlength="6" inputmode="numeric"></label>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">2</span>Cliente</h2>
+      <div class="grid">
+        <label>Tipo de documento <select id="customerDocType"></select></label>
+        <label>Número de documento <input id="customerDocNumber" autocomplete="off" spellcheck="false">
+          <span id="customerDocStatus" class="field-status"></span></label>
+        <label class="wide">Nombre o razón social <input id="customerName" autocomplete="off"></label>
+        <label class="wide">Dirección (opcional) <input id="customerAddress" autocomplete="off"></label>
+      </div>
+      <p class="hint" id="customerHint"></p>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">3</span>Productos</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-code">Código</th><th>Descripción</th><th class="col-unit">Unidad</th>
+              <th class="col-qty">Cantidad</th><th class="col-val">Valor unit. (sin IGV)</th><th class="col-aff">IGV</th>
+              <th class="col-bags" title="Marca si la línea es de bolsas plásticas: ICBPER S/ 0.50 por bolsa">Bolsa ICBPER</th>
+              <th>Valor venta</th><th>IGV</th><th>Total</th><th class="col-x"></th>
+            </tr>
+          </thead>
+          <tbody id="items"></tbody>
+        </table>
+      </div>
+      <div class="row-actions">
+        <button type="button" id="addItem">+ Agregar producto</button>
+      </div>
+      <p class="hint">El valor unitario va <strong>sin IGV</strong>. Los impuestos y totales los calcula el sistema (SPEC-003).
+        Las bolsas plásticas van en <strong>su propia línea</strong> con "Bolsa ICBPER" marcado: se cobra S/ 0.50 por cada una.</p>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">4</span>Forma de pago</h2>
+      <div class="radios">
+        <label><input type="radio" name="payment" value="Contado" checked> Contado</label>
+        <label><input type="radio" name="payment" value="Credito"> Crédito</label>
+      </div>
+      <div id="creditBox" class="hidden">
+        <table>
+          <thead><tr><th>Cuota</th><th>Monto</th><th>Vencimiento</th><th class="col-x"></th></tr></thead>
+          <tbody id="installments"></tbody>
+        </table>
+        <div class="row-actions"><button type="button" id="addInstallment">+ Agregar cuota</button></div>
+        <p class="hint">Deja los montos vacíos para dividir el total en partes iguales.</p>
+      </div>
+    </section>
+  </div>
+
+  <aside>
+    <section class="card">
+      <h2>Resumen</h2>
+      <dl class="totals">
+        <dt>Op. gravadas</dt><dd id="tTaxed">0.00</dd>
+        <dt>Op. exoneradas</dt><dd id="tExempt">0.00</dd>
+        <dt>Op. inafectas</dt><dd id="tUnaffected">0.00</dd>
+        <dt>IGV (18 %)</dt><dd id="tIgv">0.00</dd>
+        <dt>ICBPER</dt><dd id="tIcbper">0.00</dd>
+        <dt class="grand">Total</dt><dd class="grand" id="tTotal">0.00</dd>
+      </dl>
+      <div class="words" id="tWords"></div>
+      <div id="previewError" class="msg err hidden"></div>
+
+      <label class="check"><input type="checkbox" id="sign" checked> Firmar el XML</label>
+      <button type="button" class="primary" id="generate">Generar XML</button>
+      <div class="row-actions">
+        <button type="button" id="loadExample">Cargar ejemplo</button>
+        <button type="button" id="newDoc">Nuevo comprobante</button>
+      </div>
+      <div id="signerNote" class="hint"></div>
+    </section>
+
+    <section class="card hidden" id="result">
+      <h2>XML generado</h2>
+      <div id="resultMsg"></div>
+      <p class="file" id="fileName"></p>
+      <button type="button" class="primary" id="download">Descargar XML</button>
+      <ol class="tips">
+        <li>En Nubefact elige <strong>OSE</strong> y presiona <strong>Clean</strong>.</li>
+        <li><strong>Arrastra</strong> el archivo descargado; no lo copies.</li>
+        <li>No uses <strong>BeautifyXML</strong>: rompe la firma.</li>
+        <li>Desmarca <strong>Firmar</strong> para probar la firma propia.</li>
+      </ol>
+      <details>
+        <summary>Ver contenido del XML</summary>
+        <pre id="xmlPreview"></pre>
+      </details>
+    </section>
+  </aside>
+</main>
+
+<template id="itemRow">
+  <tr>
+    <td><input data-f="productCode" placeholder="Opcional"></td>
+    <td><input data-f="description" placeholder="Descripción del producto"></td>
+    <td><select data-f="unitOfMeasure"></select></td>
+    <td><input data-f="quantity" class="num" inputmode="decimal" value="1"></td>
+    <td><input data-f="unitValue" class="num" inputmode="decimal" placeholder="0.00"></td>
+    <td><select data-f="igvAffectation"></select></td>
+    <td class="center"><input data-f="icbper" type="checkbox" title="Bolsa plástica: ICBPER S/ 0.50 por unidad"></td>
+    <td class="calc" data-c="saleValue">—</td>
+    <td class="calc" data-c="igv">—</td>
+    <td class="calc" data-c="total">—</td>
+    <td><button type="button" class="icon" data-remove title="Quitar">×</button></td>
+  </tr>
+</template>
+
+<template id="installmentRow">
+  <tr>
+    <td data-n></td>
+    <td><input data-f="amount" class="num" inputmode="decimal" placeholder="Automático"></td>
+    <td><input data-f="dueDate" type="date"></td>
+    <td><button type="button" class="icon" data-remove title="Quitar">×</button></td>
+  </tr>
+</template>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let defaults = null;
+let xmlBytes = null;
+let lastFileName = '';
+let previewTimer = null;
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch { /* sin almacenamiento */ } },
+};
+
+function today() {
+  const d = new Date();
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+function now() { return new Date().toTimeString().slice(0, 8); }
+function addDays(iso, days) {
+  const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + days);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+function fillSelect(select, options, value) {
+  select.innerHTML = '';
+  for (const o of options) {
+    const opt = document.createElement('option');
+    opt.value = o.code; opt.textContent = `${o.code} · ${o.name}`;
+    select.append(opt);
+  }
+  if (value !== undefined) select.value = value;
+}
+
+function addItem(data = {}) {
+  const row = $('itemRow').content.firstElementChild.cloneNode(true);
+  fillSelect(row.querySelector('[data-f=unitOfMeasure]'), defaults.units, data.unitOfMeasure || 'NIU');
+  fillSelect(row.querySelector('[data-f=igvAffectation]'), defaults.affectations, data.igvAffectation || '10');
+  for (const [k, v] of Object.entries(data)) {
+    const el = row.querySelector(`[data-f=${k}]`);
+    if (el && el.type === 'checkbox') el.checked = Boolean(v);
+    else if (el && el.tagName === 'INPUT') el.value = v;
+  }
+  row.querySelector('[data-remove]').onclick = () => { row.remove(); schedulePreview(); };
+  $('items').append(row);
+}
+
+function addInstallment(data = {}) {
+  const row = $('installmentRow').content.firstElementChild.cloneNode(true);
+  const n = $('installments').children.length + 1;
+  row.querySelector('[data-f=dueDate]').value = data.dueDate || addDays($('issueDate').value || today(), 30 * n);
+  if (data.amount) row.querySelector('[data-f=amount]').value = data.amount;
+  row.querySelector('[data-remove]').onclick = () => { row.remove(); renumber(); schedulePreview(); };
+  $('installments').append(row);
+  renumber();
+}
+function renumber() {
+  [...$('installments').children].forEach((tr, i) => tr.querySelector('[data-n]').textContent = String(i + 1).padStart(3, '0'));
+}
+
+function paymentType() { return document.querySelector('input[name=payment]:checked').value; }
+
+function readForm() {
+  const rows = (tbody) => [...tbody.children].map((tr) => {
+    const o = {};
+    tr.querySelectorAll('[data-f]').forEach((el) => o[el.dataset.f] = el.type === 'checkbox' ? el.checked : el.value.trim());
+    return o;
+  });
+  return {
+    documentType: $('documentType').value,
+    series: $('series').value.trim().toUpperCase(),
+    sequenceNumber: Number($('sequenceNumber').value),
+    issueDate: $('issueDate').value,
+    issueTime: $('issueTime').value,
+    currency: $('currency').value,
+    issuer: {
+      ruc: $('issuerRuc').value.trim(), legalName: $('issuerLegalName').value.trim(),
+      tradeName: $('issuerTradeName').value.trim(), address: $('issuerAddress').value.trim(),
+      ubigeo: $('issuerUbigeo').value.trim(),
+    },
+    customer: {
+      documentType: $('customerDocType').value, documentNumber: $('customerDocNumber').value.trim(),
+      legalName: $('customerName').value.trim(), address: $('customerAddress').value.trim(),
+    },
+    items: rows($('items')).filter((i) => i.description || i.unitValue),
+    paymentTerms: { type: paymentType(), installments: paymentType() === 'Credito' ? rows($('installments')) : [] },
+    sign: $('sign').checked,
+  };
+}
+
+async function post(path, body) {
+  const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+function money(v) { return v === undefined ? '—' : v; }
+
+function showPreview(data) {
+  const t = data.totals;
+  $('tTaxed').textContent = t.taxedTotal; $('tExempt').textContent = t.exemptTotal;
+  $('tUnaffected').textContent = t.unaffectedTotal; $('tIgv').textContent = t.igvTotal;
+  $('tIcbper').textContent = t.icbperTotal;
+  $('tTotal').textContent = `${$('currency').value === 'USD' ? 'US$' : 'S/'} ${t.payableAmount}`;
+  $('tWords').textContent = t.amountInWords;
+  const filled = [...$('items').children].filter((tr) => tr.querySelector('[data-f=description]').value.trim() || tr.querySelector('[data-f=unitValue]').value.trim());
+  filled.forEach((tr, i) => {
+    const line = data.items[i];
+    tr.querySelector('[data-c=saleValue]').textContent = money(line?.saleValue);
+    tr.querySelector('[data-c=igv]').textContent = money(line?.igv);
+    tr.querySelector('[data-c=total]').textContent = line ? (Number(line.saleValue) + Number(line.totalTaxes)).toFixed(2) : '—';
+  });
+  if (data.paymentTerms.type === 'Credito') {
+    [...$('installments').children].forEach((tr, i) => {
+      const input = tr.querySelector('[data-f=amount]');
+      input.placeholder = data.paymentTerms.installments[i]?.amount || 'Automático';
+    });
+  }
+}
+
+function schedulePreview() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(async () => {
+    const form = readForm();
+    if (!form.items.length) { $('previewError').classList.add('hidden'); return; }
+    try {
+      showPreview(await post('/api/preview', form));
+      $('previewError').classList.add('hidden');
+    } catch (e) {
+      $('previewError').textContent = e.message;
+      $('previewError').classList.remove('hidden');
+    }
+  }, 250);
+}
+
+// Without the rules (an older server), the field stays free: never block typing.
+const FREE_RULE = { name: 'Documento', rule: '', hint: '', maxLength: 20, minLength: 0, numeric: false };
+
+function docRule() {
+  const rule = defaults.identityDocuments.find((d) => d.code === $('customerDocType').value) || {};
+  return typeof rule.maxLength === 'number' ? rule : { ...FREE_RULE, code: rule.code, name: rule.name || FREE_RULE.name };
+}
+
+function isValidRuc(ruc) {
+  if (!/^(10|15|16|17|20)\d{9}$/.test(ruc)) return false;
+  const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+  const sum = weights.reduce((acc, w, i) => acc + w * Number(ruc[i]), 0);
+  return (11 - (sum % 11)) % 10 === Number(ruc[10]);
+}
+
+function updateCustomerHint() {
+  const rule = docRule();
+  const invoiceNote = $('documentType').value === '01' && rule.code !== '6' ? ' Una factura requiere RUC.' : '';
+  $('customerHint').textContent = rule.hint ? `${rule.name}: ${rule.hint}${invoiceNote}` : invoiceNote.trim();
+}
+
+function applyDocRule() {
+  const rule = docRule();
+  const input = $('customerDocNumber');
+  const none = rule.maxLength === 0;
+  input.disabled = none;
+  if (none) input.value = '';
+  input.maxLength = none ? 1 : rule.maxLength;
+  input.inputMode = rule.numeric ? 'numeric' : 'text';
+  input.placeholder = none ? 'Sin documento' : rule.rule || '';
+  cleanDocNumber();
+  updateCustomerHint();
+}
+
+function cleanDocNumber() {
+  const rule = docRule();
+  const input = $('customerDocNumber');
+  let value = input.value.replace(/\s+/g, '');
+  value = rule.numeric ? value.replace(/\D/g, '') : value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  if (input.value !== value.slice(0, rule.maxLength || 0)) input.value = value.slice(0, rule.maxLength || 0);
+  checkDocNumber();
+}
+
+function checkDocNumber() {
+  const rule = docRule();
+  const value = $('customerDocNumber').value;
+  const status = $('customerDocStatus');
+  let text = '', kind = '';
+  if (rule.rule && rule.maxLength && value) {
+    if (value.length < rule.minLength) {
+      const missing = rule.minLength - value.length;
+      text = `Faltan ${missing} dígito${missing > 1 ? 's' : ''} (${value.length}/${rule.minLength})`; kind = 'err';
+    } else if (rule.code === '6' && !/^(10|15|16|17|20)/.test(value)) {
+      text = 'Debe empezar con 10, 15, 16, 17 o 20'; kind = 'err';
+    } else if (rule.code === '6' && !isValidRuc(value)) {
+      text = 'Dígito verificador incorrecto'; kind = 'err';
+    } else {
+      text = rule.code === '6' ? '✓ RUC válido' : `✓ ${value.length}/${rule.maxLength}`; kind = 'ok';
+    }
+  }
+  status.textContent = text;
+  status.className = 'field-status ' + kind;
+}
+
+function onDocumentTypeChange() {
+  const isInvoice = $('documentType').value === '01';
+  const series = $('series').value.toUpperCase();
+  if (isInvoice && series.startsWith('B')) $('series').value = 'F001';
+  if (!isInvoice && series.startsWith('F')) $('series').value = 'B001';
+  $('customerDocType').value = isInvoice ? '6' : '1';
+  suggestNumber();
+  applyDocRule();
+  schedulePreview();
+}
+
+function suggestNumber() {
+  const last = Number(store.get('seq:' + $('series').value.toUpperCase()) || 0);
+  $('sequenceNumber').value = last + 1;
+}
+
+function resetForm() {
+  $('issueDate').value = today(); $('issueTime').value = now();
+  $('customerDocNumber').value = ''; $('customerName').value = ''; $('customerAddress').value = '';
+  checkDocNumber();
+  $('items').innerHTML = ''; $('installments').innerHTML = '';
+  document.querySelector('input[name=payment][value=Contado]').checked = true;
+  $('creditBox').classList.add('hidden');
+  addItem();
+  suggestNumber();
+  $('result').classList.add('hidden');
+  for (const id of ['tTaxed', 'tExempt', 'tUnaffected', 'tIgv', 'tIcbper', 'tTotal']) $(id).textContent = '0.00';
+  $('tWords').textContent = '';
+  $('previewError').classList.add('hidden');
+}
+
+function loadExample() {
+  $('documentType').value = '01'; $('series').value = 'F001'; onDocumentTypeChange();
+  $('customerDocType').value = '6'; applyDocRule(); $('customerDocNumber').value = '20609876540'; checkDocNumber();
+  $('customerName').value = 'DISTRIBUIDORA EL ÑANDÚ S.A.C.'; $('customerAddress').value = 'Jr. Huánuco 789, Tingo María';
+  $('items').innerHTML = '';
+  addItem({ productCode: 'AZU-50', description: 'Azúcar rubia saco 50 kg', quantity: '4', unitValue: '120.00' });
+  addItem({ productCode: 'FID-500', description: 'Fideo spaghetti paquete 500 g', quantity: '40', unitValue: '2.20' });
+  addItem({ productCode: 'PLA-KG', description: 'Plátano de seda', unitOfMeasure: 'KGM', quantity: '10', unitValue: '2.50', igvAffectation: '20' });
+  addItem({ productCode: 'BOLSA', description: 'Bolsa plástica', quantity: '2', unitValue: '0.0847', icbper: true });
+  schedulePreview();
+}
+
+async function generateXml() {
+  const button = $('generate');
+  button.disabled = true; button.textContent = 'Generando…';
+  try {
+    const data = await post('/api/generate', readForm());
+    xmlBytes = Uint8Array.from(atob(data.xmlBase64), (c) => c.charCodeAt(0));
+    lastFileName = data.fileName;
+    $('fileName').textContent = data.fileName;
+    $('xmlPreview').textContent = new TextDecoder('iso-8859-1').decode(xmlBytes);
+    $('resultMsg').innerHTML = data.signed
+      ? `<div class="msg ok">Válido contra el XSD y firmado.<br>DigestValue: <code>${data.digestValue}</code></div>`
+      : '<div class="msg warn">Válido contra el XSD, pero <strong>sin firma</strong>: marca "Firmar" en Nubefact.</div>';
+    $('result').classList.remove('hidden');
+    store.set('seq:' + data.dto.series, String(data.dto.sequenceNumber));
+    $('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } catch (e) {
+    $('resultMsg').innerHTML = '';
+    $('previewError').textContent = 'No se pudo generar: ' + e.message;
+    $('previewError').classList.remove('hidden');
+  } finally {
+    button.disabled = false; button.textContent = 'Generar XML';
+  }
+}
+
+function download() {
+  // Bytes tal cual (ISO-8859-1): reescribirlos como texto rompería la firma.
+  const url = URL.createObjectURL(new Blob([xmlBytes], { type: 'application/xml' }));
+  const a = Object.assign(document.createElement('a'), { href: url, download: lastFileName });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function init() {
+  defaults = await (await fetch('/api/defaults')).json();
+  $('issuerRuc').value = defaults.issuer.ruc; $('issuerLegalName').value = defaults.issuer.legalName;
+  $('issuerTradeName').value = defaults.issuer.tradeName || ''; $('issuerAddress').value = defaults.issuer.address;
+  $('issuerUbigeo').value = defaults.issuer.ubigeo;
+  fillSelect($('customerDocType'), defaults.identityDocuments.map((d) => ({ code: d.code, name: d.rule ? `${d.name} (${d.rule})` : d.name })), '6');
+  $('customerDocType').addEventListener('change', applyDocRule);
+  $('customerDocNumber').addEventListener('input', cleanDocNumber);
+  $('sign').checked = defaults.canSign; $('sign').disabled = !defaults.canSign;
+  $('signerNote').textContent = defaults.canSign ? 'Certificado de prueba: sin valor legal.' : defaults.signerNote;
+  resetForm();
+  applyDocRule();
+
+  document.querySelector('main').addEventListener('input', (e) => { if (!e.target.closest('#result')) schedulePreview(); });
+  document.querySelector('main').addEventListener('change', (e) => { if (!e.target.closest('#result')) schedulePreview(); });
+  $('documentType').addEventListener('change', onDocumentTypeChange);
+  $('series').addEventListener('change', suggestNumber);
+  $('addItem').onclick = () => addItem();
+  $('addInstallment').onclick = () => { addInstallment(); schedulePreview(); };
+  document.querySelectorAll('input[name=payment]').forEach((r) => r.addEventListener('change', () => {
+    const credit = paymentType() === 'Credito';
+    $('creditBox').classList.toggle('hidden', !credit);
+    if (credit && !$('installments').children.length) addInstallment();
+  }));
+  $('generate').onclick = generateXml;
+  $('download').onclick = download;
+  $('loadExample').onclick = loadExample;
+  $('newDoc').onclick = resetForm;
+  if (location.hash === '#ejemplo') loadExample();
+}
+
+init().catch((e) => {
+  document.querySelector('main').innerHTML = `<div class="msg err">No se pudo conectar con el servidor: ${e.message}</div>`;
+});
+</script>
+</body>
+</html>

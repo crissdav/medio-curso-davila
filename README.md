@@ -11,6 +11,7 @@ the code then implements them.
 | Midterm exam | Specifications: domain model, architecture, API contracts and traceability matrix | Done, with the instructor's feedback applied |
 | Second partial | Generation of the XML from the `UBL-Invoice-2.1.xsd` schema, with unit tests | Done |
 | Signature | XMLDSig signature with a .pfx certificate (SPEC-006 R-05) | Done |
+| Web form | Local form that calculates taxes and generates the signed XML | Done |
 | Later | Submission to SUNAT/OSE, API and client apps | Specified, not implemented |
 
 ## Quick start
@@ -22,10 +23,42 @@ python -m venv .venv
 .venv\Scripts\activate          # Linux / macOS: source .venv/bin/activate
 pip install -e ".[dev]"
 
-python -m pytest                # 75 tests: XML generation, signature and file name
+python -m pytest                # 101 tests: XML generation, signature, file name and web form
+python -m abc_invoicing.web     # web form at http://127.0.0.1:8000
 ```
 
-To generate, sign and test an XML, see the next section.
+## Web form
+
+A small local web app to issue a document without writing JSON: fill in the form, press **Generar XML** and download
+the signed XML, ready to validate in Nubefact or another OSE.
+
+```bash
+python -m abc_invoicing.web                      # opens http://127.0.0.1:8000 in the browser
+python -m abc_invoicing.web --port 8080 --no-browser
+```
+
+| Section | What is filled in |
+|---|---|
+| 1. Comprobante | Type (01 invoice, 03 sales receipt), series, number, issue date and time, currency; issuer data |
+| 2. Cliente | Document type (RUC, DNI, foreigner ID, passport, or *Varios*), number, name, address. Each type shows its rule (RUC 11 digits with check digit, DNI 8 digits, foreigner ID and passport up to 12 characters) and the field checks it while typing |
+| 3. Productos | Code, description, unit (catalog 03), quantity, **unit value without IGV**, IGV affectation (taxed, exempt, unaffected), and the **Bolsa ICBPER** box on plastic bag lines |
+| 4. Forma de pago | Cash, or credit with installments (empty amounts are split equally) |
+
+- **Taxes are calculated by the system** (SPEC-003): sale value, IGV, ICBPER, unit price with IGV, totals and the
+  amount in words. The summary updates while typing.
+- **Generar XML** builds the document, validates it against the XSD, signs it and returns it in ISO-8859-1 with the
+  SUNAT file name (`20123456786-01-F001-00000125.xml`). Errors (an invoice without a valid RUC, a B series on an
+  invoice, empty lines) are shown with their reason.
+- **Descargar XML** saves the exact bytes. Load that file in Nubefact by drag and drop; copying the text or pressing
+  BeautifyXML breaks the signature.
+- The next number is suggested per series. *Cargar ejemplo* fills a sample invoice (also `http://127.0.0.1:8000/#ejemplo`).
+- It signs with `certificado-prueba.pfx` (password `123456`), and creates that test certificate if it does not exist.
+  `--cert` and `--password` (or `ABC_CERT_PASSWORD`) choose another one. The server only listens on `127.0.0.1`.
+- Plastic bags go on their own line with **Bolsa ICBPER** checked: the bag count is the quantity, as SUNAT requires
+  (error 3236 when `cbc:BaseUnitMeasure` differs from `cbc:InvoicedQuantity`).
+- Not in the form yet: ISC, discounts and free-of-charge lines. They still work through the JSON input below.
+
+To generate, sign and test an XML from a JSON file, see the next section.
 
 ## How to generate an XML
 
@@ -184,9 +217,12 @@ invoice-response.json → invoice_mapper → Invoice (domain) → UblInvoiceGene
 It generates invoices (01) and sales receipts (03) with taxed, exempt, unaffected and free-of-charge lines, ISC by catalog 08
 system, ICBPER, line discounts, cash or credit payment terms and foreign currency.
 
-The [61 tests](tests/test_invoice_generation.py) check that the generated XML equals the [reference invoice](specs/ref/20123456786-01-F001-123.xml)
+The 116 tests check that the generated XML equals the [reference invoice](specs/ref/20123456786-01-F001-123.xml)
 element by element, complies with the XSD, reports each matrix row correctly and handles the other operations. They also
-reject invalid documents and confirm that the code's tax tables match the SUNAT catalogs.
+reject invalid documents and confirm that the code's tax tables match the SUNAT catalogs
+([test_invoice_generation.py](tests/test_invoice_generation.py)), verify the signature
+([test_xml_signature.py](tests/test_xml_signature.py)), and cover the tax calculation and the web form
+([test_web_form.py](tests/test_web_form.py)).
 
 ## 3. How it is verified
 
@@ -206,7 +242,7 @@ purpose, to verify that they fail when they should.
 ## 4. Repository map
 
 ```text
-src/abc_invoicing/       XML generator: domain, application, UBL adapter and signature adapter
+src/abc_invoicing/       XML generator: domain, application (mapper, tax calculator), UBL and signature adapters, web form
 tests/                   Unit tests of the XML generation and signature
 test_xml/                Submissions to the OSE/SUNAT: input, signed XML, CDR and result per test; verify.py
 docs/                    Context, use cases, domain, architecture, API, matrix, migration and ADRs
